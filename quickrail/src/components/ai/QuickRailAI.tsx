@@ -156,7 +156,7 @@ if (roomStep === 'waitingForPnr') {
     setMessages((m) => [...m, { role: 'user', text: t }]);
     setSuggestions([]);
     run(() => aiSendMessage(t, sessionId));
-  }, [busy, run, sessionId]);
+  }, [busy, roomStep, run, sessionId]);
 
   const act = useCallback((a: AiAction, echo?: string) => {
     if (busy) return;
