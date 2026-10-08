@@ -15,6 +15,7 @@ import { PnrEnquiryModal } from './components/PnrEnquiryModal';
 import { RailWalletModal } from './components/RailWalletModal';
 import { apiMe, apiCreateBooking, apiGetWallet, getToken, setToken, ApiError } from './services/api';
 import { MyBookingsScreen } from './components/MyBookingsScreen';
+import QuickBid from './components/QuickBid';
 
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
