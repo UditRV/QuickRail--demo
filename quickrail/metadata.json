@@ -1,0 +1,6 @@
+{
+  "name": "Quick Rail - IRCTC Authorized Partner",
+  "description": "Next-generation enterprise Indian Railways ticketing platform featuring authentic IRCTC user login/register portal, working multi-mode payment gateway (UPI QR, Cards, NetBanking, RailWallet), live Tatkal radar, PNR status, real-time train tracking, interactive berth booking, and digital boarding pass.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,5 @@
+**/node_modules/
+**/dist/
+quickrail/.env.local
+quickrail-backend/.env
+.env
