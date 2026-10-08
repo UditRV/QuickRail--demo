@@ -13,6 +13,7 @@ import { walletRouter } from './routes/wallet.js';
 import { pnrRouter } from './routes/pnr.js';
 import { aiRouter } from './routes/ai.js';
 import { roomsRouter } from './routes/rooms.js';
+import { cateringRouter } from './routes/catering.js';
 
 dotenv.config();
 
@@ -45,6 +46,7 @@ app.use('/api/payments', paymentsRouter);
 app.use('/api/wallet', walletRouter);
 app.use('/api/pnr', pnrRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/catering', cateringRouter);
 
 app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 

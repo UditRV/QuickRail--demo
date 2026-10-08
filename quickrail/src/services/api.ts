@@ -263,3 +263,13 @@ export async function openRazorpayCheckout(opts: {
 }
 
 export { ApiError };
+export function apiPlaceFoodOrder(pnr: string, itemIds: string[]) {
+  return request<{ order: any }>('/api/catering/orders', {
+    method: 'POST',
+    body: JSON.stringify({ pnr, itemIds }),
+  });
+}
+
+export function apiGetFoodOrders() {
+  return request<{ orders: any[] }>('/api/catering/mine');
+}

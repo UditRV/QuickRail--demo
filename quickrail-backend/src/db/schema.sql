@@ -190,6 +190,17 @@ CREATE TABLE IF NOT EXISTS room_reservations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (user_id, booking_id)
 );
+CREATE TABLE IF NOT EXISTS food_orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  pnr TEXT NOT NULL,
+  items JSONB NOT NULL,
+  total_amount NUMERIC(10,2) NOT NULL,
+  delivery_station TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'CONFIRMED',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 CREATE INDEX IF NOT EXISTS idx_agent_sessions_user ON booking_agent_sessions(user_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id, id);
 CREATE INDEX IF NOT EXISTS idx_saved_passengers_user ON saved_passengers(user_id);

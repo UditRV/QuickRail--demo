@@ -4,6 +4,8 @@ import { aiGetSession, aiResetSession, aiSendAction, aiSendMessage, type AiActio
 import { CardView } from './Cards';
 import { PassengerForm } from './PassengerForm';
 import { apiReserveRoom, apiGetRoomReservations } from '../../services/api';
+import { CATERING_MENU_ITEMS } from '../../data/mockData';
+import { apiPlaceFoodOrder } from '../../services/api';
 
 interface Props {
 isOpen?: boolean;
@@ -51,6 +53,10 @@ const setOpen = (next: boolean) => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState('');
 const [roomStep, setRoomStep] = useState<'idle' | 'waitingForPnr'>('idle');
+const [foodStep, setFoodStep] = useState<
+  'idle' | 'waitingForPnr' | 'waitingForItems'
+>('idle');
+const [foodPnr, setFoodPnr] = useState('');
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -101,6 +107,132 @@ const [roomStep, setRoomStep] = useState<'idle' | 'waitingForPnr'>('idle');
   const send = useCallback(async (text: string) => {
     const t = text.trim();
     if (!t || busy) return;
+  if (
+    foodStep === 'idle' &&
+    /\b(food|meal|catering|order food|order meal)\b/i.test(t)
+  ) {
+    setMessages((m) => [
+      ...m,
+      { role: 'user', text: t },
+      {
+        role: 'assistant',
+        text: 'Please enter the 10-digit PNR for your confirmed ticket. Then I will show the available food menu.',
+      },
+    ]);
+    setInput('');
+    setFoodStep('waitingForPnr');
+    return;
+  }
+
+  if (foodStep === 'waitingForPnr') {
+    const digits = t.replace(/\D/g, '');
+
+    setMessages((m) => [...m, { role: 'user', text: t }]);
+    setInput('');
+
+    if (digits.length !== 10) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: 'Please enter only a valid 10-digit PNR, for example: 715-1799538',
+          error: true,
+        },
+      ]);
+      return;
+    }
+
+    const formattedPnr = `${digits.slice(0, 3)}-${digits.slice(3)}`;
+    const menuText = CATERING_MENU_ITEMS.map(
+      (item, index) =>
+        `${index + 1}. ${item.name} — ₹${item.price}`
+    ).join('\n');
+
+    setFoodPnr(formattedPnr);
+    setFoodStep('waitingForItems');
+
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'assistant',
+        text:
+          `Food menu for PNR ${formattedPnr}:\n\n` +
+          `${menuText}\n\n` +
+          `Reply with menu item number(s), for example: 1, 3`,
+      },
+    ]);
+    return;
+  }
+
+  if (foodStep === 'waitingForItems') {
+    const selectedNumbers = t
+      .split(/[\s,]+/)
+      .map(Number)
+      .filter(
+        (number) =>
+          Number.isInteger(number) &&
+          number >= 1 &&
+          number <= CATERING_MENU_ITEMS.length
+      );
+
+    setMessages((m) => [...m, { role: 'user', text: t }]);
+    setInput('');
+
+    const itemIds = selectedNumbers.map(
+      (number) => CATERING_MENU_ITEMS[number - 1].id
+    );
+
+    if (itemIds.length === 0) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: `Please reply with valid menu number(s) from 1 to ${CATERING_MENU_ITEMS.length}, for example: 1, 3`,
+          error: true,
+        },
+      ]);
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const { order } = await apiPlaceFoodOrder(foodPnr, itemIds);
+
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text:
+            `Food order confirmed!\n\n` +
+            `PNR: ${order.pnr}\n` +
+            `Delivery station: ${order.delivery_station}\n` +
+            `Amount paid: ₹${order.total_amount}\n` +
+            `Status: ${order.status}\n\n` +
+            `Your order is now visible in My Bookings.`,
+        },
+      ]);
+
+      setFoodStep('idle');
+      setFoodPnr('');
+    } catch (error) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text:
+            error instanceof Error
+              ? error.message
+              : 'Could not place the food order.',
+          error: true,
+        },
+      ]);
+    } finally {
+      setBusy(false);
+    }
+
+    return;
+  }
 if (roomStep === 'idle' && /\b(room|retiring room|reserve room|book room)\b/i.test(t)) {
   setMessages((m) => [
     ...m,
@@ -156,7 +288,7 @@ if (roomStep === 'waitingForPnr') {
     setMessages((m) => [...m, { role: 'user', text: t }]);
     setSuggestions([]);
     run(() => aiSendMessage(t, sessionId));
-  }, [busy, roomStep, run, sessionId]);
+  }, [busy, foodPnr, foodStep, roomStep, run, sessionId]);
 
   const act = useCallback((a: AiAction, echo?: string) => {
     if (busy) return;
