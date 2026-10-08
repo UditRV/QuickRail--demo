@@ -1,4 +1,4 @@
-export type ScreenType = 'home' | 'results' | 'passenger' | 'payment' | 'confirmed' | 'bookings' | 'login';
+export type ScreenType = 'home' | 'results' | 'passenger' | 'payment' | 'confirmed' | 'bookings' | 'login'| 'quickbid';
 
 export interface UserProfile {
   id: string;
