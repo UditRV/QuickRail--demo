@@ -137,7 +137,10 @@ async function onText(ctx, text) {
   const explicitRoute = /\bfrom\s+[\p{L}][\p{L} .'-]*?\s+to\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text)
     || /\bbetween\s+[\p{L}][\p{L} .'-]*?\s+and\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text);
   const hasActualPnr = /\b\d{3}[- ]?\d{7}\b/.test(text);
-  if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
+  // A help question may be asked at any point in a booking flow.  Handle it
+  // before entity extraction so phrases such as "how to book a ticket" are
+  // never sent to station lookup as a source called "book".
+  if (guideQuestion && !explicitRoute && !hasActualPnr) {
     const lowerQuestion = text.toLowerCase();
     const focusedGuide = [
       [/journey details|starting station|destination|enter my route/, `🧭 STEP 1 — ENTER JOURNEY DETAILS
