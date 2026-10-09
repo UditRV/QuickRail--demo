@@ -394,7 +394,7 @@ if (roomStep === 'waitingForPnr') {
               )}
 
               <form className="flex items-center gap-2 p-3 border-t border-[#dce9ff] bg-white" onSubmit={(e) => { e.preventDefault(); send(input); }}>
-                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="e.g. Book Mumbai to Pune tomorrow, 2 in 3A" aria-label="Message Disha "
+                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="Ask Disha how to use any QuickRail feature..." aria-label="Message Disha "
                   className="flex-1 min-w-0 rounded-full border border-[#c4c6cf] bg-[#f8f9ff] px-4 py-2 text-base sm:text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]" />
                 <button type="submit" disabled={busy || !input.trim()} aria-label="Send message" className="w-10 h-10 shrink-0 rounded-full bg-[#001026] text-white flex items-center justify-center hover:bg-[#0b2545] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]">
                   <span className="material-symbols-outlined text-[20px]">send</span>
