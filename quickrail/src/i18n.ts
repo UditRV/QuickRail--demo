@@ -57,7 +57,7 @@ const HI: Record<string, string> = {
   '6-digit OTP': '6 अंकों का OTP', 'LOG IN TO IRCTC': 'IRCTC में लॉग इन करें',
   'Back to Train Search': 'ट्रेन खोज पर वापस जाएँ', 'Step 2 of 3: Passenger & Preferences': 'चरण 2/3: यात्री और प्राथमिकताएँ',
   'Mins Remaining': 'मिनट शेष', 'Linked IRCTC User Profile': 'लिंक की गई IRCTC उपयोगकर्ता प्रोफ़ाइल',
-  'Passenger Details': 'यात्री विवरण', 'Remove': 'हटाएँ', 'Age': 'उम्र', 'Gender': 'लिंग',
+  'Remove': 'हटाएँ', 'Age': 'उम्र', 'Gender': 'लिंग',
   'Male': 'पुरुष', 'Female': 'महिला', 'Transgender': 'ट्रांसजेंडर', 'No Preference': 'कोई प्राथमिकता नहीं',
   'Lower Berth (LB)': 'लोअर बर्थ (LB)', 'Middle Berth (MB)': 'मिडिल बर्थ (MB)', 'Upper Berth (UB)': 'अपर बर्थ (UB)',
   'Side Lower (SL)': 'साइड लोअर (SL)', 'Side Upper (SU)': 'साइड अपर (SU)', 'Add Adult (+12 Yrs)': 'वयस्क जोड़ें (+12 वर्ष)',
