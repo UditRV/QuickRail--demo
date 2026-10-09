@@ -138,26 +138,80 @@ async function onText(ctx, text) {
     || /\bbetween\s+[\p{L}][\p{L} .'-]*?\s+and\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text);
   const hasActualPnr = /\\b\\d{3}[- ]?\\d{7}\\b/.test(text);
   if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
-    const knowledgeReply = await findKnowledgeReply(text);
-    say(ctx, knowledgeReply || `Here’s your QuickRail guide:
+    const bookingHowTo = /\b(book|booking|ticket|reserve|reservation)\b/i.test(text);
+    const bookingFlow = `🎫 QUICKRAIL — TICKET BOOKING FLOW
 
-• **Book or search trains:** Tell me “Book Mumbai to Pune tomorrow for 2 in 3A”, or use **Book Train**. I’ll collect the journey details, show available options, and let you review the fare before you confirm.
-• **PNR Enquiry:** Open **PNR Enquiry** and enter your PNR. Disha can also explain where to find it.
-• **Running Status:** Open **Running Status** and search for a train. Live updates depend on the data provider connected to this demo.
-• **Tourist Trains:** Open **Tourist Trains** to explore the listed special journeys.
-• **QuickBid:** Open **QuickBid** to explore the demo auction experience; it does not itself sell real railway tickets.
-• **Meals & Catering:** Open the catering feature or ask me for help. The demo may ask for a booking PNR before showing menu options.
-• **Retiring Rooms:** Open the room feature or ask me for help with the PNR-based reservation flow.
-• **RailWallet and payments:** Open **RailWallet** to view wallet options. For ticket bookings, review the fare and use the payment controls yourself.
-• **My Bookings and cancellations:** Open **My Bookings** to review your bookings. Check the cancellation details before confirming a cancellation.
-• **Account and profile:** Sign in to access account-linked bookings, saved passengers, wallet and payment features.
+[ START ]
+    ↓
+[ 1. Enter journey ]
+From station + To station + Travel date
+    ↓
+[ 2. Compare trains ]
+Choose a train and available class
+    ↓
+[ 3. Add passengers ]
+Names, ages, passenger details and preferences
+    ↓
+[ 4. Review journey ]
+Check train, date, class, availability and total fare
+    ↓
+[ 5. Confirm booking ]
+Confirm only if all details are correct
+    ↓
+[ 6. Complete payment ]
+Use an available payment method, if enabled
+    ↓
+[ 7. Verify result ]
+QuickRail shows a confirmed booking/PNR only after the backend verifies the booking and payment status
 
-Which feature would you like me to walk you through step by step?`);
+Tip: You can type “Book Mumbai to Pune tomorrow for 2 in 3A” to start.`;
+    const featureFlow = `🧭 QUICKRAIL — FEATURE GUIDE
+
+[ What do you want to do? ]
+    |
+    ├── 🎫 Book Train
+    |      ↓
+    |   Route + date → Train/class → Passengers
+    |      → Review fare → Confirm → Payment/result
+    |
+    ├── 🔎 PNR Enquiry
+    |      ↓
+    |   Enter PNR → View available ticket status
+    |
+    ├── 🚆 Running Status
+    |      ↓
+    |   Find train → View status if live data is connected
+    |
+    ├── 🧳 Tourist Trains
+    |      ↓
+    |   Open Tourist Trains → Explore listed journeys
+    |
+    ├── ⚡ QuickBid
+    |      ↓
+    |   Open QuickBid → Explore the demo auction
+    |   (This does not itself issue real railway tickets)
+    |
+    ├── 🍽️ Meals / 🛏️ Retiring Rooms
+    |      ↓
+    |   Open the feature → Follow its PNR-based steps if requested
+    |
+    ├── 💳 RailWallet / Payments
+    |      ↓
+    |   Open RailWallet → Review balance/options
+    |   Confirm payments yourself
+    |
+    └── 📋 My Bookings / Cancellations
+           ↓
+        Open My Bookings → Review booking details
+        → Check refund/cancellation terms → Confirm if desired
+
+Which branch should I walk you through?`;
+    say(ctx, bookingHowTo ? bookingFlow : featureFlow);
     ctx.suggestions = [
-      { label: 'How to book', text: 'How do I book a ticket?' },
-      { label: 'PNR & running status', text: 'How do I check PNR and running status?' },
-      { label: 'Meals & rooms', text: 'Guide me through meals and retiring rooms' },
-      { label: 'QuickBid & wallet', text: 'Explain QuickBid and RailWallet' },
+      { label: '🎫 How to book', text: 'How do I book a ticket?' },
+      { label: '🔎 PNR & status', text: 'How do I check PNR and running status?' },
+      { label: '🍽️ Meals & rooms', text: 'Guide me through meals and retiring rooms' },
+      { label: '⚡ QuickBid & wallet', text: 'Explain QuickBid and RailWallet' },
     ];
     return;
   }
