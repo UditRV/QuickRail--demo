@@ -448,7 +448,7 @@ if (roomStep === 'waitingForPnr') {
       )}
 
       {open && (
-        <section role="dialog" aria-label="Disha" className="fixed z-50 inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[420px] sm:h-[640px] sm:max-h-[calc(100vh-2.5rem)] flex flex-col bg-[#f8f9ff] sm:rounded-2xl sm:border sm:border-[#dce9ff] shadow-2xl overflow-hidden">
+        <section role="dialog" aria-label="Disha" className="fixed z-50 inset-0 md:inset-auto md:bottom-5 md:right-5 md:w-[60vw] md:h-[60vh] md:max-w-[960px] md:max-h-[calc(100vh-2.5rem)] flex flex-col bg-[#f8f9ff] md:rounded-2xl md:border md:border-[#dce9ff] shadow-2xl overflow-hidden">
           <header className="flex items-center gap-3 px-4 py-3 bg-[#001026] text-white">
             <span className="material-symbols-outlined text-[24px] text-[#ff8928]">smart_toy</span>
             <div className="min-w-0 flex-1">
