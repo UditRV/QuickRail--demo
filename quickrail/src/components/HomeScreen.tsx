@@ -3,6 +3,19 @@ import { POPULAR_ROUTES } from '../data/mockData';
 import { ScreenType } from '../types';
 import { apiGetDestinationStations, apiGetStations, type StationOption } from '../services/api';
 
+const toDateInputValue = (date: Date) => {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 10);
+};
+
+const secondsUntilLocalTime = (hour: number) => {
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(hour, 0, 0, 0);
+  if (target.getTime() <= now.getTime()) target.setDate(target.getDate() + 1);
+  return Math.ceil((target.getTime() - now.getTime()) / 1000);
+};
+
 interface HomeScreenProps {
   onSearch: (from: string, to: string, date: string, quota: string, travelClass: string) => void;
   onSelectRoute: (from: string, to: string, trainNumber?: string) => void;
@@ -19,8 +32,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onOpenDisha,
 }) => {
   // Tatkal radar countdown in seconds
-  const [acSeconds, setAcSeconds] = useState(41 * 60 + 24);
-  const [nonAcSeconds, setNonAcSeconds] = useState(101 * 60 + 24);
+  const [acSeconds, setAcSeconds] = useState(() => secondsUntilLocalTime(10));
+  const [nonAcSeconds, setNonAcSeconds] = useState(() => secondsUntilLocalTime(11));
   const [reminderSet, setReminderSet] = useState(false);
 
   // Search state
@@ -39,6 +52,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return d.toISOString().split('T')[0];
   });
   const [datePreviewText, setDatePreviewText] = useState('Tomorrow, Friday • High seat churn');
+  const bookingMinDate = toDateInputValue(new Date());
+  const bookingMaxDate = (() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 196);
+    return toDateInputValue(date);
+  })();
 
   // Include code, full name and city in the value so the browser's native
   // searchable dropdown can match abbreviations, names and city keywords.
@@ -80,12 +99,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [isSpotting, setIsSpotting] = useState(false);
   const [spotSuccess, setSpotSuccess] = useState(true);
 
-  // Update live Tatkal timers
+  // Recalculate against the local system clock every second, rather than
+  // decrementing a fixed demo number. AC opens at 10 AM, non-AC at 11 AM.
   useEffect(() => {
-    const timer = setInterval(() => {
-      setAcSeconds((prev) => (prev > 0 ? prev - 1 : 0));
-      setNonAcSeconds((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const updateTatkalCountdowns = () => {
+      setAcSeconds(secondsUntilLocalTime(10));
+      setNonAcSeconds(secondsUntilLocalTime(11));
+    };
+    updateTatkalCountdowns();
+    const timer = setInterval(updateTatkalCountdowns, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -394,6 +416,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                         id="journey-date-input"
                         type="date"
                         value={journeyDate}
+                        min={bookingMinDate}
+                        max={bookingMaxDate}
                         onChange={handleDateChange}
                       />
                     </div>
