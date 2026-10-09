@@ -23,6 +23,7 @@ import {
   windowByName, toMinutes, fromMinutes,
 } from './dateTime.js';
 import * as cards from './cards.js';
+import { findKnowledgeReply } from './knowledge.js';
 
 const MAX_ADVANCE_DAYS = Number(process.env.AI_MAX_ADVANCE_DAYS || 60);
 const MAX_RESULTS = 4;
@@ -142,6 +143,17 @@ async function onText(ctx, text) {
     }
   }
   const { intent, entities } = parsed;
+
+  // Use stored FAQ/greeting answers only for general conversation while no booking flow is active.
+  // Journey details and all booking/payment/cancellation actions continue through the existing state machine.
+  const generalConversation = ['GREETING', 'HELP', 'UNKNOWN'].includes(intent)
+    && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)
+    && !entities.source && !entities.destination && !entities.dateParsed
+    && !entities.classCode && !entities.passengers && !entities.pnr;
+  if (generalConversation) {
+    const knowledgeReply = await findKnowledgeReply(text);
+    if (knowledgeReply) { say(ctx, knowledgeReply); return; }
+  }
 
   // A finished booking → a fresh request starts a fresh flow.
   if (ctx.session.stage === 'CONFIRMED' && !['VIEW_BOOKINGS', 'CHECK_PNR', 'HELP', 'GREETING', 'CANCEL_BOOKING', 'CONFIRM_BOOKING', 'DECLINE'].includes(intent)) {
