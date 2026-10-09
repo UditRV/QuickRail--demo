@@ -130,21 +130,40 @@ function suggestionsFor(ctx) {
 // ------------------------------------------------------------------ text handling
 async function onText(ctx, text) {
   const s = ctx.state;
-  const pctx = { pendingQuestion: s.pendingQuestion, stage: ctx.session.stage, resultCount: s.shown?.length || 0 };
-  const rules = extractRules(text, pctx);
 
-  // Informational booking questions must not start a booking or be interpreted as station names.
-  const howToBookingQuestion = /^(?:how\s+to\s+(?:book|reserve)|how\s+(?:do|can|should)\s+i\s+(?:book|reserve)|what\s+is\s+the\s+(?:booking|ticket\s+booking)\s+process|(?:booking|ticket)\s+process|steps\s+to\s+(?:book|reserve))\b/i.test(text.trim());
-  const hasJourneyDetails = Boolean(
-    rules.entities.source || rules.entities.destination || rules.entities.dateParsed ||
-    rules.entities.classCode || rules.entities.passengers || rules.entities.pnr
-  );
-  if (howToBookingQuestion && !hasJourneyDetails && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
+  // Answer guide/how-to questions before station extraction: words such as "book ticket"
+  // must never be mistaken for a city or station.
+  const guideQuestion = /^(?:how\\s+(?:do|can|should)\\s+i\\b|how\\s+to\\b|guide\\s+me\\b|please\\s+guide\\b|show\\s+me\\s+how\\b|tell\\s+me\\s+how\\b|where\\s+(?:do|can)\\s+i\\b|what\\s+can\\s+i\\s+do\\b|how\\s+does\\s+(?:quickrail|disha|quickbid)\\b|explain\\s+(?:how|the)\\b)/i.test(text.trim());
+  const explicitRoute = /\\bfrom\\s+[\\p{L}][\\p{L} .'-]*?\\s+to\\s+[\\p{L}][\\p{L} .'-]*?(?=\\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\\d)|[,.?!]|$)/iu.test(text)
+    || /\\bbetween\\s+[\\p{L}][\\p{L} .'-]*?\\s+and\\s+[\\p{L}][\\p{L} .'-]*?(?=\\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\\d)|[,.?!]|$)/iu.test(text);
+  const hasActualPnr = /\\b\\d{3}[- ]?\\d{7}\\b/.test(text);
+  if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
     const knowledgeReply = await findKnowledgeReply(text);
-    say(ctx, knowledgeReply || 'To book a ticket, tell me your starting city, destination, travel date, passenger count, and preferred class. For example: “Book Mumbai to Pune tomorrow for 2 in 3A”. I’ll show available demo options and the fare before you confirm.');
-    ctx.suggestions = defaultSuggestions();
+    say(ctx, knowledgeReply || `Here’s your QuickRail guide:
+
+• **Book or search trains:** Tell me “Book Mumbai to Pune tomorrow for 2 in 3A”, or use **Book Train**. I’ll collect the journey details, show available options, and let you review the fare before you confirm.
+• **PNR Enquiry:** Open **PNR Enquiry** and enter your PNR. Disha can also explain where to find it.
+• **Running Status:** Open **Running Status** and search for a train. Live updates depend on the data provider connected to this demo.
+• **Tourist Trains:** Open **Tourist Trains** to explore the listed special journeys.
+• **QuickBid:** Open **QuickBid** to explore the demo auction experience; it does not itself sell real railway tickets.
+• **Meals & Catering:** Open the catering feature or ask me for help. The demo may ask for a booking PNR before showing menu options.
+• **Retiring Rooms:** Open the room feature or ask me for help with the PNR-based reservation flow.
+• **RailWallet and payments:** Open **RailWallet** to view wallet options. For ticket bookings, review the fare and use the payment controls yourself.
+• **My Bookings and cancellations:** Open **My Bookings** to review your bookings. Check the cancellation details before confirming a cancellation.
+• **Account and profile:** Sign in to access account-linked bookings, saved passengers, wallet and payment features.
+
+Which feature would you like me to walk you through step by step?`);
+    ctx.suggestions = [
+      { label: 'How to book', text: 'How do I book a ticket?' },
+      { label: 'PNR & running status', text: 'How do I check PNR and running status?' },
+      { label: 'Meals & rooms', text: 'Guide me through meals and retiring rooms' },
+      { label: 'QuickBid & wallet', text: 'Explain QuickBid and RailWallet' },
+    ];
     return;
   }
+
+  const pctx = { pendingQuestion: s.pendingQuestion, stage: ctx.session.stage, resultCount: s.shown?.length || 0 };
+  const rules = extractRules(text, pctx);
 
   let parsed = rules;
   const strict = ['CONFIRM_BOOKING', 'DECLINE', 'SELECT_TRAIN', 'ABORT_FLOW'].includes(rules.intent);
@@ -157,7 +176,7 @@ async function onText(ctx, text) {
     }
   }
   // Prevent the language model from turning generic commands like “book ticket” into fake station names.
-  const entityText = text.trim().toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  const entityText = text.trim().toLowerCase().replace(/[^a-z0-9\\s]/g, ' ').replace(/\\s+/g, ' ').trim();
   if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(entityText) ||
       /^(?:a|the) tickets?$/.test(entityText)) {
     if (parsed.entities) {
@@ -168,7 +187,6 @@ async function onText(ctx, text) {
   const { intent, entities } = parsed;
 
   // Use stored FAQ/greeting answers only for general conversation while no booking flow is active.
-  // Journey details and all booking/payment/cancellation actions continue through the existing state machine.
   const generalConversation = ['GREETING', 'HELP', 'UNKNOWN'].includes(intent)
     && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)
     && !entities.source && !entities.destination && !entities.dateParsed
