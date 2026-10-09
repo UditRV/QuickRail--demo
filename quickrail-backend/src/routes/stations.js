@@ -3,6 +3,27 @@ import { query } from '../db/pool.js';
 
 export const stationsRouter = Router();
 
+// Direct destinations that can actually be searched from one origin station.
+stationsRouter.get('/destinations/:fromCode', async (req, res) => {
+  const fromCode = String(req.params.fromCode || '').trim().toUpperCase();
+  if (!fromCode) return res.status(400).json({ error: 'Origin station code is required' });
+
+  try {
+    const result = await query(
+      `SELECT DISTINCT s.code, s.name, s.city, s.state
+       FROM trains t
+       JOIN stations s ON s.code = t.to_station_code
+       WHERE t.from_station_code = $1
+       ORDER BY s.name`,
+      [fromCode]
+    );
+    res.json({ stations: result.rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch destination stations' });
+  }
+});
+
 stationsRouter.get('/', async (req, res) => {
   const { q } = req.query;
   try {

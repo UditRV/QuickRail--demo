@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { POPULAR_ROUTES } from '../data/mockData';
 import { ScreenType } from '../types';
+import { apiGetDestinationStations, apiGetStations, type StationOption } from '../services/api';
 
 interface HomeScreenProps {
   onSearch: (from: string, to: string, date: string, quota: string, travelClass: string) => void;
@@ -25,6 +26,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   // Search state
   const [fromStation, setFromStation] = useState('NDLS - New Delhi');
   const [toStation, setToStation] = useState('MMCT - Mumbai Central');
+  const [stations, setStations] = useState<StationOption[]>([]);
+  const [destinationStations, setDestinationStations] = useState<StationOption[]>([]);
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(false);
   const [travelClass, setTravelClass] = useState('VB');
   const [travelQuota, setTravelQuota] = useState('GN');
   const [isSwapping, setIsSwapping] = useState(false);
@@ -35,6 +39,28 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return d.toISOString().split('T')[0];
   });
   const [datePreviewText, setDatePreviewText] = useState('Tomorrow, Friday • High seat churn');
+
+  const stationValue = (station: StationOption) => `${station.code} - ${station.name}`;
+  const stationCode = (value: string) => value.split(' - ')[0];
+
+  useEffect(() => {
+    apiGetStations().then(({ stations: results }) => setStations(results)).catch(() => setStations([]));
+  }, []);
+
+  useEffect(() => {
+    const fromCode = stationCode(fromStation);
+    if (!fromCode) return;
+    setIsLoadingDestinations(true);
+    apiGetDestinationStations(fromCode)
+      .then(({ stations: results }) => {
+        setDestinationStations(results);
+        if (results.length && !results.some((station) => stationValue(station) === toStation)) {
+          setToStation(stationValue(results[0]));
+        }
+      })
+      .catch(() => setDestinationStations([]))
+      .finally(() => setIsLoadingDestinations(false));
+  }, [fromStation]);
 
   // PNR Widget State
   const [pnrInput, setPnrInput] = useState('');
@@ -240,20 +266,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </label>
                     <div className="flex items-center gap-space-sm mt-0.5">
                       <span className="material-symbols-outlined text-[#964900] text-[22px]">train</span>
-                      <input
-                        className="w-full bg-transparent font-headline-sm text-headline-sm text-[#001026] font-bold focus:outline-none placeholder:text-[#74777f]"
+                      <select
+                        className="w-full min-w-0 bg-transparent font-headline-sm text-headline-sm text-[#001026] font-bold focus:outline-none cursor-pointer"
                         id="origin-station-input"
-                        placeholder="Enter origin city or code"
-                        type="text"
                         value={fromStation}
                         onChange={(e) => setFromStation(e.target.value)}
-                      />
-                      <span className="font-data-mono text-data-mono bg-[#dce9ff] text-[#001026] px-space-xs py-0.5 rounded text-[11px] font-bold shrink-0">
-                        NORTH
-                      </span>
+                      >
+                        {stations.length === 0 && <option value={fromStation}>{fromStation}</option>}
+                        {stations.map((station) => (
+                          <option key={station.code} value={stationValue(station)}>
+                            {station.code} — {station.name}, {station.city}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="text-[#44474e] font-body-sm text-body-sm mt-0.5 truncate">
-                      DLI, NZM, ANVT Stations Included
+                      Select any station in the QuickRail network
                     </div>
                   </div>
 
@@ -281,20 +309,23 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
                     </label>
                     <div className="flex items-center gap-space-sm mt-0.5">
                       <span className="material-symbols-outlined text-[#964900] text-[22px]">location_on</span>
-                      <input
-                        className="w-full bg-transparent font-headline-sm text-headline-sm text-[#001026] font-bold focus:outline-none placeholder:text-[#74777f]"
+                      <select
+                        className="w-full min-w-0 bg-transparent font-headline-sm text-headline-sm text-[#001026] font-bold focus:outline-none cursor-pointer disabled:opacity-60"
                         id="dest-station-input"
-                        placeholder="Enter destination city or code"
-                        type="text"
                         value={toStation}
                         onChange={(e) => setToStation(e.target.value)}
-                      />
-                      <span className="font-data-mono text-data-mono bg-[#dce9ff] text-[#001026] px-space-xs py-0.5 rounded text-[11px] font-bold shrink-0">
-                        WEST
-                      </span>
+                        disabled={isLoadingDestinations || destinationStations.length === 0}
+                      >
+                        {destinationStations.length === 0 && <option value={toStation}>{isLoadingDestinations ? 'Loading destinations…' : 'No direct destinations available'}</option>}
+                        {destinationStations.map((station) => (
+                          <option key={station.code} value={stationValue(station)}>
+                            {station.code} — {station.name}, {station.city}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="text-[#44474e] font-body-sm text-body-sm mt-0.5 truncate">
-                      CSMT, BDTS, BVI Stations Included
+                      {isLoadingDestinations ? 'Loading available destinations…' : `${destinationStations.length} direct destination${destinationStations.length === 1 ? '' : 's'} available`}
                     </div>
                   </div>
                 </div>

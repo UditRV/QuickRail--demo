@@ -87,6 +87,21 @@ export function apiSearchTrains(from: string, to: string, date: string) {
   return request<{ trains: any[]; journeyDate: string }>(`/api/trains/search?${params}`);
 }
 
+export interface StationOption {
+  code: string;
+  name: string;
+  city: string;
+  state: string;
+}
+
+export function apiGetStations() {
+  return request<{ stations: StationOption[] }>('/api/stations');
+}
+
+export function apiGetDestinationStations(fromCode: string) {
+  return request<{ stations: StationOption[] }>(`/api/stations/destinations/${encodeURIComponent(fromCode)}`);
+}
+
 // ---------- Bookings ----------
 
 export interface CreateBookingInput {
