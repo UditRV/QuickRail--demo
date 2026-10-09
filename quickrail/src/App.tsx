@@ -321,27 +321,32 @@ export function App() {
       {/* Screen Container with Top Margin for Fixed Header */}
       <main className="flex-1 pt-32 sm:pt-36">
 {currentScreen === 'home' && (
-  <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 pb-3 flex justify-center">
-    <button
-      type="button"
-      onClick={() => {
-        setCurrentScreen('quickbid');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }}
-      className="YOUR_EXISTING_CLASSNAME"
-    >
-      {/* Keep your existing QuickBid button contents */}
-    </button>
-  </div>
-)}
+  <>
+    <div className="max-w-[1440px] w-full mx-auto px-4 sm:px-6 pb-3 flex justify-center">
+      <button
+        type="button"
+        onClick={() => {
+          setCurrentScreen('quickbid');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#001026] via-[#12306b] to-[#001026] px-5 py-2.5 text-sm font-bold text-white shadow-lg ring-1 ring-[#ff8928]/60 transition hover:scale-[1.03] hover:ring-[#ff8928] active:scale-95"
+      >
+        <span className="text-[#ff8928]">⚡</span>
+        QuickBid – Can you beat the AI?
+        <span className="rounded-full bg-amber-300/20 px-2 py-0.5 text-[10px] font-semibold text-amber-200">
+          DEMO
+        </span>
+      </button>
+    </div>
 
-<HomeScreen
-  onSearch={handleSearch}
-  onSelectRoute={handleSelectRouteFromPopular}
-  onOpenPnrStatus={handleOpenPnrStatus}
-  onOpenCatering={() => setIsCateringOpen(true)}
-  onOpenDisha={() => setIsDishaOpen(true)}
-/>
+    <HomeScreen
+      onSearch={handleSearch}
+      onSelectRoute={handleSelectRouteFromPopular}
+      onOpenPnrStatus={handleOpenPnrStatus}
+      onOpenCatering={() => setIsCateringOpen(true)}
+      onOpenDisha={() => setIsDishaOpen(true)}
+    />
+  </>
 )}
 
         {currentScreen === 'results' && (
