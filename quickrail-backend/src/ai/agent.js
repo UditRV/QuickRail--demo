@@ -136,7 +136,7 @@ async function onText(ctx, text) {
   const guideQuestion = /^(?:how\s+(?:do|can|should)\s+i\b|how\s+to\b|guide\s+me\b|please\s+guide\b|show\s+me\s+how\b|tell\s+me\s+how\b|where\s+(?:do|can)\s+i\b|what\s+can\s+i\s+do\b|how\s+does\s+(?:quickrail|disha|quickbid)\b|explain\s+(?:how|the)\b)/i.test(text.trim());
   const explicitRoute = /\bfrom\s+[\p{L}][\p{L} .'-]*?\s+to\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text)
     || /\bbetween\s+[\p{L}][\p{L} .'-]*?\s+and\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text);
-  const hasActualPnr = /\\b\\d{3}[- ]?\\d{7}\\b/.test(text);
+  const hasActualPnr = /\b\d{3}[- ]?\d{7}\b/.test(text);
   if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
     const lowerQuestion = text.toLowerCase();
     const focusedGuide = [
