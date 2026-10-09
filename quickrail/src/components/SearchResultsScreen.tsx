@@ -15,6 +15,7 @@ interface SearchResultsScreenProps {
   journeyDate: string;
   quota: string;
   travelClass: string;
+  onJourneyDateChange: (date: string) => void;
   onSelectTrainAndClass: (train: Train, selectedClass: CoachClass) => void;
   onModifySearch: () => void;
   onOpenDisha: () => void;
@@ -25,6 +26,7 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
   toStation,
   journeyDate,
   quota,
+  onJourneyDateChange,
   onSelectTrainAndClass,
   onModifySearch,
   onOpenDisha,
@@ -110,15 +112,27 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
   const [availableOnly, setAvailableOnly] = useState(true);
   const [selectedTimeWindow, setSelectedTimeWindow] = useState<string | null>(null);
   const [selectedSort, setSelectedSort] = useState<'earliest' | 'fastest' | 'available'>('fastest');
-  const [dateIndex, setDateIndex] = useState(1);
+  const formatDateLabel = (date: Date) =>
+    new Intl.DateTimeFormat('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
 
-  const datesList = [
-    { label: 'Thu, 17 Oct', status: 'Few Seats' },
-    { label: 'Fri, 18 Oct', status: 'Fastest: ₹2,380*', selected: true },
-    { label: 'Sat, 19 Oct', status: 'Tatkal Open' },
-    { label: 'Sun, 20 Oct', status: 'RAC Available' },
-    { label: 'Mon, 21 Oct', status: 'Available' },
-  ];
+  // Build the carousel from the journey date selected on the home screen.
+  // Noon avoids browser time-zone conversion moving the date to the previous day.
+  const selectedDate = new Date(`${journeyDate}T12:00:00`);
+  const datesList = [-1, 0, 1, 2, 3].map((offset) => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + offset);
+    return {
+      iso: date.toISOString().slice(0, 10),
+      label: formatDateLabel(date),
+      status: offset === 0 ? 'Selected journey date' : offset === 1 ? 'Tatkal Open' : 'Check availability',
+    };
+  });
+  const dateIndex = 1;
+
+  const changeJourneyDate = (date: string) => {
+    onJourneyDateChange(date);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSelectClass = (trainNumber: string, classCode: string) => {
     setSelectedTrainClasses((prev) => ({
@@ -218,7 +232,11 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
         <div className="bg-white rounded-xl p-space-xs shadow-sm border border-[#eff4ff] flex items-center justify-between gap-1 overflow-x-auto">
           <button
             type="button"
-            onClick={() => setDateIndex((prev) => Math.max(0, prev - 1))}
+            onClick={() => {
+              const date = new Date(`${journeyDate}T12:00:00`);
+              date.setDate(date.getDate() - 1);
+              changeJourneyDate(date.toISOString().slice(0, 10));
+            }}
             className="p-space-sm text-[#44474e] hover:text-[#001026] hover:bg-[#eff4ff] rounded-lg cursor-pointer"
             title="Previous Day"
           >
@@ -230,7 +248,7 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
               <button
                 key={d.label}
                 type="button"
-                onClick={() => setDateIndex(idx)}
+                onClick={() => changeJourneyDate(d.iso)}
                 className={`flex-1 py-space-xs px-space-sm rounded-lg text-center transition-all cursor-pointer ${
                   dateIndex === idx
                     ? 'bg-[#0b2545] text-white shadow-sm'
@@ -251,7 +269,11 @@ export const SearchResultsScreen: React.FC<SearchResultsScreenProps> = ({
 
           <button
             type="button"
-            onClick={() => setDateIndex((prev) => Math.min(datesList.length - 1, prev + 1))}
+            onClick={() => {
+              const date = new Date(`${journeyDate}T12:00:00`);
+              date.setDate(date.getDate() + 1);
+              changeJourneyDate(date.toISOString().slice(0, 10));
+            }}
             className="p-space-sm text-[#44474e] hover:text-[#001026] hover:bg-[#eff4ff] rounded-lg cursor-pointer"
             title="Next Day"
           >

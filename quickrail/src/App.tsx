@@ -76,6 +76,8 @@ export function App() {
   const [journeyDate, setJourneyDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
+    // Keep the local calendar date: toISOString() can move it back a day in India.
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
     return d.toISOString().split('T')[0];
   });
   const [travelQuota, setTravelQuota] = useState('GN');
@@ -356,6 +358,7 @@ export function App() {
             journeyDate={journeyDate}
             quota={travelQuota}
             travelClass={travelClass}
+            onJourneyDateChange={setJourneyDate}
             onSelectTrainAndClass={handleSelectTrainAndClass}
             onModifySearch={() => {
               setCurrentScreen('home');
