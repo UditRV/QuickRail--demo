@@ -48,7 +48,41 @@ onOpenWallet,
   onOpenChange,
 }) => {
  const [internalOpen, setInternalOpen] = useState(false);
+const [panelPosition, setPanelPosition] = useState<{ x: number; y: number } | null>(null);
+const [isDraggingPanel, setIsDraggingPanel] = useState(false);
+const dragOffset = useRef({ x: 0, y: 0 });
 const open = isOpen ?? internalOpen;
+
+useEffect(() => {
+  if (!isDraggingPanel) return;
+  const onPointerMove = (event: PointerEvent) => {
+    const panel = document.querySelector<HTMLElement>('[data-disha-panel="true"]');
+    const width = panel?.offsetWidth ?? 560;
+    const height = panel?.offsetHeight ?? 780;
+    const x = Math.max(8, Math.min(window.innerWidth - width - 8, event.clientX - dragOffset.current.x));
+    const y = Math.max(8, Math.min(window.innerHeight - height - 8, event.clientY - dragOffset.current.y));
+    setPanelPosition({ x, y });
+  };
+  const onPointerUp = () => setIsDraggingPanel(false);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
+  return () => {
+    window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('pointerup', onPointerUp);
+    window.removeEventListener('pointercancel', onPointerUp);
+  };
+}, [isDraggingPanel]);
+
+const startPanelDrag = (event: React.PointerEvent<HTMLElement>) => {
+  if ((event.target as HTMLElement).closest('button')) return;
+  const panel = event.currentTarget.closest<HTMLElement>('[data-disha-panel="true"]');
+  if (!panel) return;
+  const rect = panel.getBoundingClientRect();
+  dragOffset.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  setPanelPosition({ x: rect.left, y: rect.top });
+  setIsDraggingPanel(true);
+};
 
 const setOpen = (next: boolean) => {
   setInternalOpen(next);
@@ -448,13 +482,14 @@ if (roomStep === 'waitingForPnr') {
       )}
 
       {open && (
-        <section role="dialog" aria-label="Disha" className="fixed z-50 inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[420px] sm:h-[640px] sm:max-h-[calc(100vh-2.5rem)] flex flex-col bg-[#f8f9ff] sm:rounded-2xl sm:border sm:border-[#dce9ff] shadow-2xl overflow-hidden">
-          <header className="flex items-center gap-3 px-4 py-3 bg-[#001026] text-white">
+        <section data-disha-panel="true" role="dialog" aria-label="Disha" style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto', bottom: 'auto' } : undefined} className={`fixed z-50 flex flex-col bg-[#f8f9ff] border border-[#dce9ff] shadow-2xl overflow-hidden inset-2 rounded-2xl sm:inset-auto sm:w-[560px] sm:h-[780px] sm:max-h-[calc(100vh-1rem)] sm:max-w-[calc(100vw-1rem)] ${panelPosition ? '' : 'sm:bottom-4 sm:right-4'}`}>
+          <header onPointerDown={startPanelDrag} className={`flex items-center gap-3 px-4 py-3 bg-[#001026] text-white select-none touch-none ${isDraggingPanel ? 'cursor-grabbing' : 'cursor-grab'}`} title="Drag to move Disha">
             <span className="material-symbols-outlined text-[24px] text-[#ff8928]">smart_toy</span>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold leading-tight">Disha</div>
-              <div className="text-[11px] text-[#cbdbf5] truncate">Your AI railway booking assistant</div>
+              <div className="text-base font-bold leading-tight">Disha</div>
+              <div className="text-xs text-[#cbdbf5] truncate">Your AI railway booking assistant · Drag header to move</div>
             </div>
+            <span className="material-symbols-outlined hidden sm:inline text-white/60" aria-hidden="true">open_with</span>
             {isLoggedIn && <button onClick={reset} disabled={busy} title="Start over" aria-label="Start a new booking" className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]"><span className="material-symbols-outlined text-[20px]">restart_alt</span></button>}
             <button onClick={() => setOpen(false)} aria-label="Close Disha " className="p-1.5 rounded-md hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]"><span className="material-symbols-outlined text-[20px]">close</span></button>
           </header>
