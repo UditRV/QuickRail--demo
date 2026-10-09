@@ -817,7 +817,11 @@ async function renderCurrent(ctx, opts = {}) {
 
 // ------------------------------------------------------------------ button actions
 const actionSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('SELECT_TRAIN'), trainNumber: z.string().regex(/^\d{5}$/), classCode: z.string().max(3).optional() }),
+  z.object({
+  type: z.literal('SELECT_TRAIN'),
+  trainNumber: z.string().min(3).max(8).regex(/^[A-Z0-9]+$/),
+  classCode: z.string().max(3).optional(),
+}),
   z.object({ type: z.literal('CHOOSE_ROUTE'), from: z.string().max(8), to: z.string().max(8) }),
   z.object({ type: z.literal('SUBMIT_PASSENGERS'), passengers: z.array(z.any()).min(1).max(MAX_PAX) }),
   z.object({ type: z.literal('CONFIRM_BOOKING'), token: z.string().max(64) }),
