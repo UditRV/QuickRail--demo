@@ -84,6 +84,29 @@ const HI: Record<string, string> = {
   'Price to beat': 'जिस कीमत को पार करना है', 'Live bids': 'लाइव बोलियाँ', 'Reset score': 'स्कोर रीसेट करें',
   'Can you beat the AI?': 'क्या आप AI को हरा सकते हैं?'
 
+  'Instant Auto-Refund Guarantee': 'तुरंत ऑटो-रिफंड की गारंटी',
+  'PCI-DSS Level 1 Certified': 'PCI-DSS लेवल 1 प्रमाणित',
+  'Security Standards': 'सुरक्षा मानक', 'Privacy Policy': 'गोपनीयता नीति', 'Refund Policy': 'रिफंड नीति',
+  'Which route do you mean?': 'आप किस मार्ग की बात कर रहे हैं?',
+  'Which class would you like?': 'आप कौन-सी श्रेणी चुनना चाहेंगे?',
+  'Which train would you like?': 'आप कौन-सी ट्रेन चुनना चाहेंगे?',
+  'There’s nothing waiting for confirmation right now. What would you like to do?': 'अभी पुष्टि के लिए कुछ लंबित नहीं है। आप क्या करना चाहेंगे?',
+  'The payment wasn’t completed. Your ticket has not been confirmed.': 'भुगतान पूरा नहीं हुआ। आपके टिकट की पुष्टि नहीं हुई है।',
+  'Your ticket is confirmed!': 'आपके टिकट की पुष्टि हो गई है!',
+  'Please send me the 10-digit PNR (for example 241-9084321).': 'कृपया 10 अंकों का PNR भेजें (उदाहरण: 241-9084321)।',
+  'I couldn’t find an active booking with that PNR on your account.': 'आपके खाते में इस PNR की कोई सक्रिय बुकिंग नहीं मिली।',
+  'You don’t have any active bookings to cancel.': 'रद्द करने के लिए आपकी कोई सक्रिय बुकिंग नहीं है।',
+  'Your ticket is unchanged.': 'आपके टिकट में कोई बदलाव नहीं किया गया है।',
+  'Okay. Anything else I can help with?': 'ठीक है। क्या मैं किसी और चीज़ में मदद कर सकती हूँ?',
+  'No problem. What would you like to change — the date, class, passengers or the train?': 'कोई बात नहीं। आप क्या बदलना चाहेंगे — तारीख, श्रेणी, यात्री या ट्रेन?',
+  'Welcome back! Let’s continue with your booking.': 'वापसी पर स्वागत है! चलिए आपकी बुकिंग आगे बढ़ाते हैं।',
+  'Welcome back — your seats are still held. Choose a payment method to finish.': 'वापसी पर स्वागत है — आपकी सीटें अभी भी होल्ड पर हैं। पूरा करने के लिए भुगतान का तरीका चुनें।',
+  'Seats are held for 8 minutes. Choose how you’d like to pay — you’ll be charged only when you press pay.': 'सीटें 8 मिनट के लिए होल्ड की गई हैं। भुगतान का तरीका चुनें — भुगतान बटन दबाने पर ही राशि ली जाएगी।',
+  'The booking could not be completed. Please check your booking status before trying again.': 'बुकिंग पूरी नहीं हो सकी। दोबारा प्रयास करने से पहले अपनी बुकिंग स्थिति जाँचें।',
+  'I can only show PNRs booked from your account, and I couldn’t find that one. For any other PNR, use PNR Enquiry on the QuickRail site.': 'मैं केवल आपके खाते से बुक किए गए PNR दिखा सकती हूँ और यह PNR नहीं मिला। अन्य PNR के लिए QuickRail साइट पर PNR पूछताछ का उपयोग करें।',
+  'That cancellation request expired — please ask me to cancel again.': 'रद्दीकरण अनुरोध की समय-सीमा समाप्त हो गई — कृपया फिर से रद्द करने को कहें।',
+  'Your ticket (PNR': 'आपका टिकट (PNR'
+
 };
 const EN: Record<string, string> = Object.fromEntries(Object.entries(HI).map(([english, hindi]) => [hindi, english]));
 function translateValue(value: string, language: UiLanguage): string {
