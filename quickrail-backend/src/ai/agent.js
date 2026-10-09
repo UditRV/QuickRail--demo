@@ -132,6 +132,20 @@ async function onText(ctx, text) {
   const s = ctx.state;
   const pctx = { pendingQuestion: s.pendingQuestion, stage: ctx.session.stage, resultCount: s.shown?.length || 0 };
   const rules = extractRules(text, pctx);
+
+  // Informational booking questions must not start a booking or be interpreted as station names.
+  const howToBookingQuestion = /^(?:how\s+to\s+(?:book|reserve)|how\s+(?:do|can|should)\s+i\s+(?:book|reserve)|what\s+is\s+the\s+(?:booking|ticket\s+booking)\s+process|(?:booking|ticket)\s+process|steps\s+to\s+(?:book|reserve))\b/i.test(text.trim());
+  const hasJourneyDetails = Boolean(
+    rules.entities.source || rules.entities.destination || rules.entities.dateParsed ||
+    rules.entities.classCode || rules.entities.passengers || rules.entities.pnr
+  );
+  if (howToBookingQuestion && !hasJourneyDetails && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
+    const knowledgeReply = await findKnowledgeReply(text);
+    say(ctx, knowledgeReply || 'To book a ticket, tell me your starting city, destination, travel date, passenger count, and preferred class. For example: “Book Mumbai to Pune tomorrow for 2 in 3A”. I’ll show available demo options and the fare before you confirm.');
+    ctx.suggestions = defaultSuggestions();
+    return;
+  }
+
   let parsed = rules;
   const strict = ['CONFIRM_BOOKING', 'DECLINE', 'SELECT_TRAIN', 'ABORT_FLOW'].includes(rules.intent);
   if (!strict && llmEnabled()) {
@@ -140,6 +154,15 @@ async function onText(ctx, text) {
       // CONFIRM_BOOKING is honoured only from the strict rule parser — never from a model.
       const intent = l.intent === 'UNKNOWN' || l.intent === 'CONFIRM_BOOKING' || l.intent === 'DECLINE' ? rules.intent : l.intent;
       parsed = { intent, entities: { ...l.entities, ...rules.entities } };
+    }
+  }
+  // Prevent the language model from turning generic commands like “book ticket” into fake station names.
+  const entityText = text.trim().toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(entityText) ||
+      /^(?:a|the) tickets?$/.test(entityText)) {
+    if (parsed.entities) {
+      if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(String(parsed.entities.source || '').toLowerCase().trim())) delete parsed.entities.source;
+      if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(String(parsed.entities.destination || '').toLowerCase().trim())) delete parsed.entities.destination;
     }
   }
   const { intent, entities } = parsed;
