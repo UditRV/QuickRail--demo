@@ -410,6 +410,16 @@ Which branch should I walk you through?`;
       if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(String(parsed.entities.destination || '').toLowerCase().trim())) delete parsed.entities.destination;
     }
   }
+  // Generic booking requests contain no route. Never accept model-guessed words like
+  // "i want" or "book" as station entities; let the state machine ask for the source.
+  const genericBookingRequest = /^(?:(?:i\\s+)?(?:want|wanna|need|would\\s+like|\\x27d\\s+like)\\s+(?:to\\s+)?(?:book|reserve)(?:\\s+(?:me\\s+)?(?:a|the)?\\s*(?:train\\s+)?tickets?)?|(?:book|reserve)(?:\\s+me)?(?:\\s+a)?(?:\\s+train)?\\s*tickets?)$/i.test(text.trim());
+  if (genericBookingRequest && !/\\bfrom\\b.*\\bto\\b|\\bbetween\\b.*\\band\\b/i.test(text)) {
+    parsed.intent = 'BOOK_TICKET';
+    if (parsed.entities) {
+      delete parsed.entities.source;
+      delete parsed.entities.destination;
+    }
+  }
   const { intent, entities } = parsed;
 
   // Use stored FAQ/greeting answers only for general conversation while no booking flow is active.
