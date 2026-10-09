@@ -21,6 +21,15 @@ onOpenChange?: (open: boolean) => void;
   onOpenWallet: (amount?: number) => void;
 }
 
+const HINDI_SUGGESTIONS: Suggestion[] = [
+  { label: '🧭 मार्गदर्शन', text: 'मुझे QuickRail का उपयोग करना सिखाएँ' },
+  { label: '🎫 टिकट बुक करें', text: 'टिकट बुक करें' },
+  { label: '🔎 ट्रेन खोजें', text: 'ट्रेन खोजें' },
+  { label: '📋 पीएनआर और स्थिति', text: 'पीएनआर स्थिति दिखाएँ' },
+  { label: '🍽️ अन्य सुविधाएँ', text: 'क्विकबिड और रेलवॉलेट के बारे में बताएँ' },
+  { label: '🚆 बुकिंग शुरू करें', text: 'टिकट बुक करें' },
+];
+const WELCOME_HI: AiMessage = { role: 'assistant', text: 'नमस्ते! मैं दिशा हूँ, आपकी QuickRail सहायक। मैं टिकट बुकिंग, ट्रेन खोज, पीएनआर पूछताछ, ट्रेन की स्थिति, पर्यटक ट्रेनें, क्विकबिड, रेलवॉलेट, भोजन, रिटायरिंग रूम, भुगतान, रद्दीकरण और खाते की सुविधाओं में मदद कर सकती हूँ। पूछें “QuickRail का उपयोग कैसे करें?” या बताएं कि आप क्या करना चाहते हैं।' };
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   { label: '🧭 Guide me', text: 'How do I use QuickRail?' },
   { label: '🎫 How to book', text: 'How do I book a ticket?' },
@@ -124,8 +133,8 @@ const setOpen = (next: boolean) => {
   setInternalOpen(next);
   onOpenChange?.(next);
 };
-  const [messages, setMessages] = useState<AiMessage[]>([WELCOME]);
-  const [suggestions, setSuggestions] = useState<Suggestion[]>(DEFAULT_SUGGESTIONS);
+  const [messages, setMessages] = useState<AiMessage[]>([language === 'हिन्दी' ? WELCOME_HI : WELCOME]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>(language === 'हिन्दी' ? HINDI_SUGGESTIONS : DEFAULT_SUGGESTIONS);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [input, setInput] = useState('');
 const [roomStep, setRoomStep] = useState<'idle' | 'waitingForPnr'>('idle');
@@ -141,6 +150,15 @@ const [walletAmount, setWalletAmount] = useState<number | null>(null);
   const [loaded, setLoaded] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (messages.length <= 1) {
+      setMessages([language === 'हिन्दी' ? WELCOME_HI : WELCOME]);
+      setSuggestions(language === 'हिन्दी' ? HINDI_SUGGESTIONS : DEFAULT_SUGGESTIONS);
+    }
+  // Preserve any active conversation when the language changes.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [language]);
 
   // Restore the in-progress booking after a page refresh (state lives on the server).
   useEffect(() => {
@@ -502,7 +520,7 @@ if (roomStep === 'waitingForPnr') {
     if (busy) return;
     setBusy(true);
     try { await aiResetSession(); } catch { /* ignore */ }
-    setSessionId(null); setMessages([WELCOME]); setSuggestions(DEFAULT_SUGGESTIONS); setBusy(false);
+    setSessionId(null); setMessages([language === 'हिन्दी' ? WELCOME_HI : WELCOME]); setSuggestions(language === 'हिन्दी' ? HINDI_SUGGESTIONS : DEFAULT_SUGGESTIONS); setBusy(false);
   };
 
   const lastAssistant = messages.map((m, i) => (m.role === 'assistant' ? i : -1)).reduce((a, b) => Math.max(a, b), -1);
@@ -511,17 +529,7 @@ if (roomStep === 'waitingForPnr') {
     <>
       {!open && (
         <button
-<<<<<<< HEAD
           data-disha-launcher="true"
-          onPointerDown={startLauncherDrag}
-          onClick={() => { if (!launcherMoved.current) setOpen(true); }}
-          aria-label="Open Disha booking assistant"
-          style={launcherPosition ? { left: launcherPosition.x, top: launcherPosition.y, right: 'auto', bottom: 'auto' } : undefined}
-          className={`fixed z-50 bottom-5 right-5 flex items-center gap-2 pl-3 pr-4 py-3 rounded-full bg-[#001026] text-white shadow-lg hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2 touch-none select-none ${isDraggingLauncher ? 'cursor-grabbing' : 'cursor-grab'}`}>
-          <span className="material-symbols-outlined text-[22px] text-[#ff8928]">smart_toy</span>
-          <span className="text-sm font-bold">Disha</span>
-=======
-          onClick={() => setOpen(true)}
           onPointerDown={(event) => {
             if (event.button !== 0) return;
             const target = event.currentTarget;
@@ -555,17 +563,18 @@ if (roomStep === 'waitingForPnr') {
             if (event.currentTarget.dataset.dragged === 'true') {
               event.preventDefault();
               event.stopPropagation();
+              return;
             }
+            setOpen(true);
           }}
-          aria-label="Open Disha booking assistant. Drag to move."
-          title="Click to open Disha · Drag to move"
+          aria-label={language === "हिन्दी" ? "दिशा सहायक खोलें। खिसकाने के लिए खींचें।" : "Open Disha booking assistant. Drag to move."}
+          title={language === "हिन्दी" ? "दिशा खोलने के लिए क्लिक करें · खिसकाने के लिए खींचें" : "Click to open Disha · Drag to move"}
           className={`fixed z-50 w-[260px] max-w-[calc(100vw-16px)] justify-between flex items-center gap-4 px-7 py-4 rounded-full bg-[#001026] text-white shadow-xl border border-[#24466b] hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2 cursor-grab active:cursor-grabbing touch-none select-none ${panelPosition ? '' : 'bottom-6 right-6'}`}
           style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto', bottom: 'auto' } : undefined}
         >
           <span className="material-symbols-outlined text-[32px] text-[#ff8928]">smart_toy</span>
           <span className="text-lg font-bold">Disha</span>
           <span className="material-symbols-outlined text-base text-white/60" aria-hidden="true">open_with</span>
->>>>>>> 88f049d981def2740812dbab26c0c7aa8ec69c94
         </button>
       )}
 
@@ -575,7 +584,7 @@ if (roomStep === 'waitingForPnr') {
             <span className="material-symbols-outlined text-[24px] text-[#ff8928]">smart_toy</span>
             <div className="min-w-0 flex-1">
               <div className="text-base font-bold leading-tight">Disha</div>
-              <div className="text-xs text-[#cbdbf5] truncate">Your AI railway booking assistant · Drag header to move</div>
+              <div className="text-xs text-[#cbdbf5] truncate">आपकी AI रेलवे बुकिंग सहायक · खिसकाने के लिए हेडर खींचें</div>
             </div>
             <span className="material-symbols-outlined hidden sm:inline text-white/60" aria-hidden="true">open_with</span>
             {isLoggedIn && <button onClick={reset} disabled={busy} title="Start over" aria-label="Start a new booking" className="p-1.5 rounded-md hover:bg-white/10 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]"><span className="material-symbols-outlined text-[20px]">restart_alt</span></button>}
@@ -587,7 +596,7 @@ if (roomStep === 'waitingForPnr') {
               <span className="material-symbols-outlined text-[40px] text-[#0b2545]">lock</span>
               <div className="font-bold text-[#001026]">Sign in to book with Disha </div>
               <p className="text-sm text-[#44474e]">Bookings, saved passengers and payments are tied to your QuickRail account.</p>
-              <button onClick={() => { setOpen(false); onRequireLogin(); }} className="px-5 py-2 rounded-lg bg-[#001026] text-white text-sm font-semibold hover:bg-[#0b2545]">Sign in</button>
+              <button onClick={() => { setOpen(false); onRequireLogin(); }} className="px-5 py-2 rounded-lg bg-[#001026] text-white text-sm font-semibold hover:bg-[#0b2545]">साइन इन करें</button>
             </div>
           ) : (
             <>
@@ -626,9 +635,9 @@ if (roomStep === 'waitingForPnr') {
               )}
 
               <form className="flex items-center gap-2 p-3 border-t border-[#dce9ff] bg-white" onSubmit={(e) => { e.preventDefault(); send(input); }}>
-                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="Ask Disha how to use any QuickRail feature..." aria-label="Message Disha "
+                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder={language === "हिन्दी" ? "QuickRail की किसी भी सुविधा के बारे में दिशा से पूछें..." : "Ask Disha how to use any QuickRail feature..."} aria-label={language === "हिन्दी" ? "दिशा को संदेश भेजें" : "Message Disha "}
                   className="flex-1 min-w-0 rounded-full border border-[#c4c6cf] bg-[#f8f9ff] px-4 py-2 text-base sm:text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]" />
-                <button type="submit" disabled={busy || !input.trim()} aria-label="Send message" className="w-10 h-10 shrink-0 rounded-full bg-[#001026] text-white flex items-center justify-center hover:bg-[#0b2545] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]">
+                <button type="submit" disabled={busy || !input.trim()} aria-label={language === "हिन्दी" ? "संदेश भेजें" : "Send message"} className="w-10 h-10 shrink-0 rounded-full bg-[#001026] text-white flex items-center justify-center hover:bg-[#0b2545] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]">
                   <span className="material-symbols-outlined text-[20px]">send</span>
                 </button>
               </form>
