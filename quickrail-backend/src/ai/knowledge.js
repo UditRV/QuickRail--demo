@@ -42,8 +42,16 @@ export async function findKnowledgeReply(message) {
     }
 
     if (score < 70) {
-      const matched = keywords.filter((word) => inputWords.has(normalize(word)));
-      if (matched.length >= 2) score = Math.max(score, 40 + Math.min(matched.length, 5));
+      const matched = keywords.filter((word) => {
+        const key = normalize(word);
+        return key && (input.includes(key) || inputWords.has(key));
+      });
+      const denominator = Math.max(1, Math.min(inputWords.size, keywords.length));
+      const overlap = matched.length / denominator;
+      // Permit a strong keyword match for paraphrased FAQs, but avoid weak one-word matches.
+      if (matched.length >= 2 && overlap >= 0.5) {
+        score = Math.max(score, 70 + Math.min(matched.length, 5));
+      }
     }
 
     if (score > bestScore) {
