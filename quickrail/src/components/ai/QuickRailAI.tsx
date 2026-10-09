@@ -474,10 +474,51 @@ if (roomStep === 'waitingForPnr') {
   return (
     <>
       {!open && (
-        <button onClick={() => setOpen(true)} aria-label="Open Disha booking assistant"
-          className="fixed z-50 bottom-5 right-5 flex items-center gap-2 pl-3 pr-4 py-3 rounded-full bg-[#001026] text-white shadow-lg hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2">
-          <span className="material-symbols-outlined text-[22px] text-[#ff8928]">smart_toy</span>
-          <span className="text-sm font-bold">Disha</span>
+        <button
+          onClick={() => setOpen(true)}
+          onPointerDown={(event) => {
+            if (event.button !== 0) return;
+            const target = event.currentTarget;
+            const rect = target.getBoundingClientRect();
+            dragOffset.current = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+            const startX = event.clientX;
+            const startY = event.clientY;
+            let moved = false;
+            const onMove = (moveEvent: PointerEvent) => {
+              if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) < 5) return;
+              moved = true;
+              setPanelPosition({
+                x: Math.max(8, Math.min(window.innerWidth - rect.width - 8, moveEvent.clientX - dragOffset.current.x)),
+                y: Math.max(8, Math.min(window.innerHeight - rect.height - 8, moveEvent.clientY - dragOffset.current.y)),
+              });
+            };
+            const onUp = () => {
+              window.removeEventListener('pointermove', onMove);
+              window.removeEventListener('pointerup', onUp);
+              window.removeEventListener('pointercancel', onUp);
+              if (moved) {
+                target.dataset.dragged = 'true';
+                window.setTimeout(() => { delete target.dataset.dragged; }, 100);
+              }
+            };
+            window.addEventListener('pointermove', onMove);
+            window.addEventListener('pointerup', onUp);
+            window.addEventListener('pointercancel', onUp);
+          }}
+          onClick={(event) => {
+            if (event.currentTarget.dataset.dragged === 'true') {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }}
+          aria-label="Open Disha booking assistant. Drag to move."
+          title="Click to open Disha · Drag to move"
+          className={`fixed z-50 flex items-center gap-3 px-5 py-4 rounded-full bg-[#001026] text-white shadow-xl border border-[#24466b] hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2 cursor-grab active:cursor-grabbing touch-none select-none ${panelPosition ? '' : 'bottom-6 right-6'}`}
+          style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto', bottom: 'auto' } : undefined}
+        >
+          <span className="material-symbols-outlined text-[32px] text-[#ff8928]">smart_toy</span>
+          <span className="text-lg font-bold">Disha</span>
+          <span className="material-symbols-outlined text-base text-white/60" aria-hidden="true">open_with</span>
         </button>
       )}
 
