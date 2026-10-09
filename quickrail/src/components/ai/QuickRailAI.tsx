@@ -19,11 +19,14 @@ onOpenChange?: (open: boolean) => void;
 }
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
-  { label: '🚆 Book a Ticket', text: 'Book a ticket' }, { label: '🔎 Find Trains', text: 'Find trains' },
-  { label: '💰 Cheapest Train', text: 'Find the cheapest train' }, { label: '⚡ Fastest Train', text: 'Find the fastest train' },
-  { label: '📋 My Bookings', text: 'Show my bookings' },
+  { label: '🧭 Guide me', text: 'How do I use QuickRail?' },
+  { label: '🎫 How to book', text: 'How do I book a ticket?' },
+  { label: '🔎 Find trains', text: 'How do I search and compare trains?' },
+  { label: '📋 PNR & status', text: 'How do I check PNR and running status?' },
+  { label: '🍽️ More features', text: 'Guide me through QuickBid, RailWallet, meals and retiring rooms' },
+  { label: '🚆 Book now', text: 'Book a ticket' },
 ];
-const WELCOME: AiMessage = { role: 'assistant', text: 'Hi! I’m Disha , your AI railway booking assistant. Try: “Book Mumbai to Pune tomorrow morning for 2 in 3A”. You always review the fare before anything is charged.' };
+const WELCOME: AiMessage = { role: 'assistant', text: 'Hi! I’m Disha, your QuickRail guide. I can walk you through booking, train search, PNR enquiry, running status, tourist trains, QuickBid, RailWallet, meals, retiring rooms, payments, cancellations, and account features. Ask “How do I use QuickRail?” or tell me what you want to do.' };
 
 const TypingIndicator = () => (
   <div className="flex items-center gap-1 px-3 py-2.5 rounded-2xl rounded-bl-sm bg-white border border-[#dce9ff] w-fit" role="status" aria-label="Disha is typing">
