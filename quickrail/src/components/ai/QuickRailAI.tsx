@@ -30,6 +30,19 @@ const HINDI_SUGGESTIONS: Suggestion[] = [
   { label: '🚆 बुकिंग शुरू करें', text: 'टिकट बुक करें' },
 ];
 const WELCOME_HI: AiMessage = { role: 'assistant', text: 'नमस्ते! मैं दिशा हूँ, आपकी QuickRail सहायक। मैं टिकट बुकिंग, ट्रेन खोज, पीएनआर पूछताछ, ट्रेन की स्थिति, पर्यटक ट्रेनें, क्विकबिड, रेलवॉलेट, भोजन, रिटायरिंग रूम, भुगतान, रद्दीकरण और खाते की सुविधाओं में मदद कर सकती हूँ। पूछें “QuickRail का उपयोग कैसे करें?” या बताएं कि आप क्या करना चाहते हैं।' };
+
+const normalizeHindiCommand = (value: string): string => {
+  const text = value.trim().toLocaleLowerCase('hi-IN');
+  if (/quickrail.*(उपयोग|कैसे)|मार्गदर्शन|मदद/.test(text)) return 'How do I use QuickRail?';
+  if (/टिकट.*बुक|बुक.*टिकट/.test(text)) return 'Book a ticket';
+  if (/ट्रेन.*खोज|ट्रेन.*ढूँढ|ट्रेन.*ढूंढ/.test(text)) return 'Find trains';
+  if (/पीएनआर|चलती ट्रेन|ट्रेन की स्थिति/.test(text)) return 'How do I check PNR and running status?';
+  if (/क्विकबिड|रेलवॉलेट|भोजन|रिटायरिंग रूम/.test(text)) return 'Guide me through QuickBid, RailWallet, meals and retiring rooms';
+  if (/मेरी बुकिंग|बुकिंग दिखा/.test(text)) return 'Show my bookings';
+  if (/रद्द|कैंसल/.test(text)) return 'cancel';
+  return value;
+};
+
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
   { label: '🧭 Guide me', text: 'How do I use QuickRail?' },
   { label: '🎫 How to book', text: 'How do I book a ticket?' },
@@ -483,8 +496,9 @@ if (roomStep === 'waitingForPnr') {
     setInput('');
     setMessages((m) => [...m, { role: 'user', text: t }]);
     setSuggestions([]);
-    run(() => aiSendMessage(t, sessionId));
-  }, [busy, foodPnr, foodStep, roomStep, run, sessionId, walletAmount, walletStep, onOpenWallet]);
+    const backendMessage = language === 'हिन्दी' ? normalizeHindiCommand(t) : t;
+    run(() => aiSendMessage(backendMessage, sessionId));
+  }, [busy, foodPnr, foodStep, roomStep, run, sessionId, walletAmount, walletStep, onOpenWallet, language]);
 
   const act = useCallback((a: AiAction, echo?: string) => {
     if (busy) return;
