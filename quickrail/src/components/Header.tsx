@@ -91,19 +91,10 @@ export const Header: React.FC<HeaderProps> = ({
             className="flex items-center gap-space-md text-left cursor-pointer group"
           >
             <img
-              alt="Quick Rail Logo"
-              className="h-8 w-auto object-contain transition-transform group-hover:scale-105"
+              alt="QuickRail logo"
+              className="h-10 sm:h-14 w-auto max-w-[150px] sm:max-w-[190px] object-contain transition-transform group-hover:scale-[1.02]"
               src={QUICK_RAIL_LOGO}
             />
-            <div className="flex flex-col">
-              <span className="font-headline-md text-headline-md text-[#001026] tracking-tight font-bold">
-                Quick Rail
-              </span>
-              <div className="flex items-center gap-space-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#ff8928]"></span>
-                <span className="font-label-sm text-[11px] text-[#44474e]">IRCTC Authorized Partner</span>
-              </div>
-            </div>
           </button>
         </div>
 
