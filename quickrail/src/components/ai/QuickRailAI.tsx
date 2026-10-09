@@ -557,7 +557,7 @@ if (roomStep === 'waitingForPnr') {
           }}
           aria-label="Open Disha booking assistant. Drag to move."
           title="Click to open Disha · Drag to move"
-          className={`fixed z-50 flex items-center gap-3 px-5 py-4 rounded-full bg-[#001026] text-white shadow-xl border border-[#24466b] hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2 cursor-grab active:cursor-grabbing touch-none select-none ${panelPosition ? '' : 'bottom-6 right-6'}`}
+          className={`fixed z-50 w-[260px] max-w-[calc(100vw-16px)] justify-between flex items-center gap-4 px-7 py-4 rounded-full bg-[#001026] text-white shadow-xl border border-[#24466b] hover:bg-[#0b2545] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928] focus-visible:ring-offset-2 cursor-grab active:cursor-grabbing touch-none select-none ${panelPosition ? '' : 'bottom-6 right-6'}`}
           style={panelPosition ? { left: panelPosition.x, top: panelPosition.y, right: 'auto', bottom: 'auto' } : undefined}
         >
           <span className="material-symbols-outlined text-[32px] text-[#ff8928]">smart_toy</span>
