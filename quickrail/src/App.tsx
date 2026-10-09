@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { applyUiLanguage } from './i18n';
 import { ScreenType, Train, CoachClass, BookingState, Passenger, UserProfile, PaymentDetails } from './types';
 import { INITIAL_TRAINS, MASTER_PASSENGERS } from './data/mockData';
 import { Header } from './components/Header';
@@ -21,6 +22,12 @@ export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('home');
   const [previousScreen, setPreviousScreen] = useState<ScreenType>('home');
   const [language, setLanguage] = useState<'ENG' | 'हिन्दी'>('ENG');
+
+  useEffect(() => {
+    document.documentElement.lang = language === 'हिन्दी' ? 'hi' : 'en';
+    const root = document.getElementById('root') || document.body;
+    return applyUiLanguage(root, language);
+  }, [language]);
 
   // User Profile state — starts as a signed-out guest; a real session is restored
   // below from a stored JWT (if any) via GET /api/auth/me.
@@ -469,6 +476,7 @@ export function App() {
             <QuickRailAI
         isOpen={isDishaOpen}
         onOpenChange={setIsDishaOpen}
+        language={language}
         isLoggedIn={currentUser.isLoggedIn}
         userName={currentUser.name}
         userEmail={currentUser.email}

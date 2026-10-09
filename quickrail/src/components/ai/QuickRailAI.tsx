@@ -11,6 +11,7 @@ import { apiPlaceFoodOrder } from '../../services/api';
 interface Props {
 isOpen?: boolean;
 onOpenChange?: (open: boolean) => void;
+  language?: 'ENG' | 'हिन्दी';
   isLoggedIn: boolean;
   userName: string;
   userEmail: string;
@@ -46,6 +47,7 @@ export const QuickRailAI: React.FC<Props> = ({
 onOpenWallet,
   isOpen,
   onOpenChange,
+  language = 'ENG',
 }) => {
  const [internalOpen, setInternalOpen] = useState(false);
 const [panelPosition, setPanelPosition] = useState<{ x: number; y: number } | null>(null);
