@@ -49,7 +49,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   const [journeyDate, setJourneyDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() + 1);
-    return d.toISOString().split('T')[0];
+    return toDateInputValue(d);
   });
   const [datePreviewText, setDatePreviewText] = useState('Tomorrow, Friday • High seat churn');
   const bookingMinDate = toDateInputValue(new Date());
@@ -111,17 +111,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  const formatAcTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}m ${String(s).padStart(2, '0')}s`;
-  };
-
-  const formatNonAcTime = (secs: number) => {
+  const formatCountdown = (secs: number) => {
     const h = Math.floor(secs / 3600);
     const m = Math.floor((secs % 3600) / 60);
     const s = secs % 60;
-    return `${h}h ${m}m ${String(s).padStart(2, '0')}s`;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
   const handleSwapStations = () => {
@@ -205,13 +199,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <p className="font-body-md text-body-md truncate">
               <span className="font-semibold text-[#964900]">AC Tatkal</span> opens in{' '}
               <span className="font-data-mono text-data-mono font-bold text-[#001026] bg-white px-space-xs py-0.5 rounded shadow-sm">
-                {formatAcTime(acSeconds)}
+                {formatCountdown(acSeconds)}
               </span>{' '}
               (10:00 AM)
               <span className="text-[#c4c6cf] mx-space-xs">|</span>
               <span className="font-semibold text-[#001026]">Non-AC Tatkal</span> in{' '}
               <span className="font-data-mono text-data-mono font-bold text-[#001026] bg-white px-space-xs py-0.5 rounded shadow-sm">
-                {formatNonAcTime(nonAcSeconds)}
+                {formatCountdown(nonAcSeconds)}
               </span>{' '}
               (11:00 AM)
             </p>
