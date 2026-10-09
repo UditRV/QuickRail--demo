@@ -10,8 +10,9 @@ const useSsl = String(process.env.PGSSL).toLowerCase() === 'true';
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: useSsl ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 15000,
+  max: 5,
 });
-
 pool.on('error', (err) => {
   console.error('Unexpected Postgres error on idle client', err);
 });
