@@ -3,6 +3,7 @@ import { ApiError, apiCreatePaymentOrder, apiVerifyPayment, openRazorpayCheckout
 import { aiGetSession, aiResetSession, aiSendAction, aiSendMessage, type AiAction, type AiMessage, type AiTurn, type Suggestion } from '../../services/aiApi';
 import { CardView } from './Cards';
 import { PassengerForm } from './PassengerForm';
+import { GuideFlowchart } from './GuideFlowchart';
 import { apiReserveRoom, apiGetRoomReservations } from '../../services/api';
 import { CATERING_MENU_ITEMS } from '../../data/mockData';
 import { apiPlaceFoodOrder } from '../../services/api';
@@ -368,9 +369,13 @@ if (roomStep === 'waitingForPnr') {
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[92%] space-y-2 ${m.role === 'user' ? '' : 'w-full'}`}>
                       {m.text && (
-                        <div className={`px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === 'user' ? 'bg-[#001026] text-white rounded-2xl rounded-br-sm ml-auto w-fit' : m.error ? 'bg-red-50 border border-red-200 text-red-800 rounded-2xl rounded-bl-sm w-fit' : 'bg-white border border-[#dce9ff] text-[#0b1c30] rounded-2xl rounded-bl-sm w-fit'}`}>
-                          {m.text.split(/(\*\*[^*]+\*\*)/g).map((p, k) => (p.startsWith('**') && p.endsWith('**') ? <strong key={k}>{p.slice(2, -2)}</strong> : <React.Fragment key={k}>{p}</React.Fragment>))}
-                        </div>
+                        m.role === 'assistant' && !m.error && (m.text.includes('QUICKRAIL — TICKET BOOKING FLOW') || m.text.includes('QUICKRAIL — FEATURE GUIDE')) ? (
+                          <GuideFlowchart text={m.text} onAction={(message) => send(message)} />
+                        ) : (
+                          <div className={`px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === 'user' ? 'bg-[#001026] text-white rounded-2xl rounded-br-sm ml-auto w-fit' : m.error ? 'bg-red-50 border border-red-200 text-red-800 rounded-2xl rounded-bl-sm w-fit' : 'bg-white border border-[#dce9ff] text-[#0b1c30] rounded-2xl rounded-bl-sm w-fit'}`}>
+                            {m.text.split(/(\*\*[^*]+\*\*)/g).map((p, k) => (p.startsWith('**') && p.endsWith('**') ? <strong key={k}>{p.slice(2, -2)}</strong> : <React.Fragment key={k}>{p}</React.Fragment>))}
+                          </div>
+                        )
                       )}
                       {m.cards?.map((c, k) => (
                         <CardView key={k} card={c} active={i === lastAssistant && !busy} busy={busy}
