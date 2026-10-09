@@ -182,13 +182,13 @@ const [walletAmount, setWalletAmount] = useState<number | null>(null);
       setSessionId(v.sessionId);
       const hist: AiMessage[] = v.messages.map((m) => ({ role: m.role, text: m.text }));
       const cur = v.current && (v.current.text || v.current.cards.length) ? [{ role: 'assistant' as const, text: v.current.text, cards: v.current.cards }] : [];
-      setMessages([WELCOME, ...hist.slice(-12), ...cur]);
+      setMessages([language === 'हिन्दी' ? WELCOME_HI : WELCOME, ...hist.slice(-12), ...cur]);
       setSuggestions(v.suggestions?.length ? v.suggestions : []);
     }).catch(() => { /* fall back to a fresh chat */ });
   }, [open, isLoggedIn, loaded]);
 
   // New login / logout → drop the previous user's conversation from memory.
-  useEffect(() => { setLoaded(false); setSessionId(null); setMessages([WELCOME]); setSuggestions(DEFAULT_SUGGESTIONS); }, [isLoggedIn, userEmail]);
+  useEffect(() => { setLoaded(false); setSessionId(null); setMessages([language === 'हिन्दी' ? WELCOME_HI : WELCOME]); setSuggestions(language === 'हिन्दी' ? HINDI_SUGGESTIONS : DEFAULT_SUGGESTIONS); }, [isLoggedIn, userEmail]);
 
   useLayoutEffect(() => { scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: 'smooth' }); }, [messages, busy, open]);
   useEffect(() => { if (open) { const t = setTimeout(() => inputRef.current?.focus(), 50); return () => clearTimeout(t); } }, [open]);
