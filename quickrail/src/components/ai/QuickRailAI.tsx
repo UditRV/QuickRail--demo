@@ -3,6 +3,7 @@ import { ApiError, apiCreatePaymentOrder, apiVerifyPayment, openRazorpayCheckout
 import { aiGetSession, aiResetSession, aiSendAction, aiSendMessage, type AiAction, type AiMessage, type AiTurn, type Suggestion } from '../../services/aiApi';
 import { CardView } from './Cards';
 import { PassengerForm } from './PassengerForm';
+import { GuideFlowchart } from './GuideFlowchart';
 import { apiReserveRoom, apiGetRoomReservations } from '../../services/api';
 import { CATERING_MENU_ITEMS } from '../../data/mockData';
 import { apiPlaceFoodOrder } from '../../services/api';
@@ -20,11 +21,14 @@ onOpenChange?: (open: boolean) => void;
 }
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
-  { label: '🚆 Book a Ticket', text: 'Book a ticket' }, { label: '🔎 Find Trains', text: 'Find trains' },
-  { label: '💰 Cheapest Train', text: 'Find the cheapest train' }, { label: '⚡ Fastest Train', text: 'Find the fastest train' },
-  { label: '📋 My Bookings', text: 'Show my bookings' },
+  { label: '🧭 Guide me', text: 'How do I use QuickRail?' },
+  { label: '🎫 How to book', text: 'How do I book a ticket?' },
+  { label: '🔎 Find trains', text: 'How do I search and compare trains?' },
+  { label: '📋 PNR & status', text: 'How do I check PNR and running status?' },
+  { label: '🍽️ More features', text: 'Guide me through QuickBid, RailWallet, meals and retiring rooms' },
+  { label: '🚆 Book now', text: 'Book a ticket' },
 ];
-const WELCOME: AiMessage = { role: 'assistant', text: 'Hi! I’m Disha , your AI railway booking assistant. Try: “Book Mumbai to Pune tomorrow morning for 2 in 3A”. You always review the fare before anything is charged.' };
+const WELCOME: AiMessage = { role: 'assistant', text: 'Hi! I’m Disha, your QuickRail guide. I can walk you through booking, train search, PNR enquiry, running status, tourist trains, QuickBid, RailWallet, meals, retiring rooms, payments, cancellations, and account features. Ask “How do I use QuickRail?” or tell me what you want to do.' };
 
 const TypingIndicator = () => (
   <div className="flex items-center gap-1 px-3 py-2.5 rounded-2xl rounded-bl-sm bg-white border border-[#dce9ff] w-fit" role="status" aria-label="Disha is typing">
@@ -469,9 +473,13 @@ if (roomStep === 'waitingForPnr') {
                   <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                     <div className={`max-w-[92%] space-y-2 ${m.role === 'user' ? '' : 'w-full'}`}>
                       {m.text && (
-                        <div className={`px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === 'user' ? 'bg-[#001026] text-white rounded-2xl rounded-br-sm ml-auto w-fit' : m.error ? 'bg-red-50 border border-red-200 text-red-800 rounded-2xl rounded-bl-sm w-fit' : 'bg-white border border-[#dce9ff] text-[#0b1c30] rounded-2xl rounded-bl-sm w-fit'}`}>
-                          {m.text.split(/(\*\*[^*]+\*\*)/g).map((p, k) => (p.startsWith('**') && p.endsWith('**') ? <strong key={k}>{p.slice(2, -2)}</strong> : <React.Fragment key={k}>{p}</React.Fragment>))}
-                        </div>
+                        m.role === 'assistant' && !m.error && (m.text.includes('QUICKRAIL — TICKET BOOKING FLOW') || m.text.includes('QUICKRAIL — FEATURE GUIDE')) ? (
+                          <GuideFlowchart text={m.text} onAction={(message) => send(message)} />
+                        ) : (
+                          <div className={`px-3 py-2 text-sm whitespace-pre-wrap break-words ${m.role === 'user' ? 'bg-[#001026] text-white rounded-2xl rounded-br-sm ml-auto w-fit' : m.error ? 'bg-red-50 border border-red-200 text-red-800 rounded-2xl rounded-bl-sm w-fit' : 'bg-white border border-[#dce9ff] text-[#0b1c30] rounded-2xl rounded-bl-sm w-fit'}`}>
+                            {m.text.split(/(\*\*[^*]+\*\*)/g).map((p, k) => (p.startsWith('**') && p.endsWith('**') ? <strong key={k}>{p.slice(2, -2)}</strong> : <React.Fragment key={k}>{p}</React.Fragment>))}
+                          </div>
+                        )
                       )}
                       {m.cards?.map((c, k) => (
                         <CardView key={k} card={c} active={i === lastAssistant && !busy} busy={busy}
@@ -495,7 +503,7 @@ if (roomStep === 'waitingForPnr') {
               )}
 
               <form className="flex items-center gap-2 p-3 border-t border-[#dce9ff] bg-white" onSubmit={(e) => { e.preventDefault(); send(input); }}>
-                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="e.g. Book Mumbai to Pune tomorrow, 2 in 3A" aria-label="Message Disha "
+                <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} maxLength={500} placeholder="Ask Disha how to use any QuickRail feature..." aria-label="Message Disha "
                   className="flex-1 min-w-0 rounded-full border border-[#c4c6cf] bg-[#f8f9ff] px-4 py-2 text-base sm:text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]" />
                 <button type="submit" disabled={busy || !input.trim()} aria-label="Send message" className="w-10 h-10 shrink-0 rounded-full bg-[#001026] text-white flex items-center justify-center hover:bg-[#0b2545] disabled:opacity-40 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff8928]">
                   <span className="material-symbols-outlined text-[20px]">send</span>

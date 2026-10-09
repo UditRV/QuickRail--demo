@@ -23,6 +23,7 @@ import {
   windowByName, toMinutes, fromMinutes,
 } from './dateTime.js';
 import * as cards from './cards.js';
+import { findKnowledgeReply } from './knowledge.js';
 
 const MAX_ADVANCE_DAYS = Number(process.env.AI_MAX_ADVANCE_DAYS || 60);
 const MAX_RESULTS = 4;
@@ -129,8 +130,264 @@ function suggestionsFor(ctx) {
 // ------------------------------------------------------------------ text handling
 async function onText(ctx, text) {
   const s = ctx.state;
+
+  // Answer guide/how-to questions before station extraction: words such as "book ticket"
+  // must never be mistaken for a city or station.
+  const guideQuestion = /^(?:how\s+(?:do|can|should)\s+i\b|how\s+to\b|guide\s+me\b|please\s+guide\b|show\s+me\s+how\b|tell\s+me\s+how\b|where\s+(?:do|can)\s+i\b|what\s+can\s+i\s+do\b|how\s+does\s+(?:quickrail|disha|quickbid)\b|explain\s+(?:how|the)\b)/i.test(text.trim());
+  const explicitRoute = /\bfrom\s+[\p{L}][\p{L} .'-]*?\s+to\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text)
+    || /\bbetween\s+[\p{L}][\p{L} .'-]*?\s+and\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text);
+  const hasActualPnr = /\b\d{3}[- ]?\d{7}\b/.test(text);
+  if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
+    const lowerQuestion = text.toLowerCase();
+    const focusedGuide = [
+      [/journey details|starting station|destination|enter my route/, `🧭 STEP 1 — ENTER JOURNEY DETAILS
+
+[ From station ] → Choose your starting station
+        ↓
+[ To station ] → Choose your destination
+        ↓
+[ Travel date ] → Select the date you want to travel
+        ↓
+[ Continue ] → Search trains for this route and date
+
+Tip: You can type “Book Mumbai to Pune tomorrow for 2 in 3A” to start the booking flow.`],
+      [/search and compare|compare trains|find trains/, `🔎 STEP 2 — SEARCH AND COMPARE TRAINS
+
+[ Route + date ]
+      ↓
+[ Search results ]
+      ↓
+[ Compare timings, duration and displayed availability ]
+      ↓
+[ Choose a train ]
+      ↓
+[ Select an available class ]
+
+Only rely on live availability when a verified live data provider is connected. Select a train to continue.`],
+      [/add passenger|passenger details|passenger information/, `👤 STEP 3 — ADD PASSENGERS
+
+[ Select passenger count ]
+      ↓
+[ Enter each passenger’s required details ]
+      ↓
+[ Review names, ages and preferences ]
+      ↓
+[ Submit passenger details ]
+
+Enter accurate information as requested by the form. Do not send passwords, payment OTPs or card details in chat.`],
+      [/review (?:the )?fare|check (?:the )?fare|fare before|total amount|price before/, `💰 STEP 4 — REVIEW THE FARE
+
+[ Check train + route + date ]
+      ↓
+[ Check class + passenger count ]
+      ↓
+[ Review availability and fare breakdown ]
+      ↓
+[ Continue only if the details and total are correct ]
+
+The displayed fare depends on the data and pricing configured for this QuickRail deployment.`],
+      [/confirm (?:my |the )?booking|booking confirmation/, `✅ STEP 5 — CONFIRM BOOKING
+
+[ Recheck journey and passenger details ]
+      ↓
+[ Select the explicit Confirm action ]
+      ↓
+[ Follow the payment step if enabled ]
+      ↓
+[ Wait for the backend result ]
+
+Do not treat a pending or failed payment as a confirmed booking.`],
+      [/payment options|complete payment|pay for|payment method/, `💳 STEP 6 — PAYMENT
+
+[ Review the amount ]
+      ↓
+[ Choose an available payment option ]
+      ↓
+[ Complete payment in the secure payment window ]
+      ↓
+[ Return to QuickRail and wait for verification ]
+
+Never share your OTP, password, PIN or full card details with Disha.`],
+      [/confirmed booking|find my booking|view my booking|my bookings/, `📋 FIND A BOOKING
+
+[ Open My Bookings ]
+      ↓
+[ Find the relevant journey ]
+      ↓
+[ Open its details ]
+      ↓
+[ Check the status and PNR if available ]
+
+Disha should report confirmation only when the backend returns a verified booking status.`],
+      [/pnr/, `🔎 PNR ENQUIRY
+
+[ Open PNR Enquiry ]
+      ↓
+[ Enter your PNR ]
+      ↓
+[ Submit the enquiry ]
+      ↓
+[ Review the status returned by QuickRail ]
+
+The result depends on the PNR data source connected to this deployment.`],
+      [/running status|live train|train status/, `🚆 RUNNING STATUS
+
+[ Open Running Status ]
+      ↓
+[ Search for or select a train ]
+      ↓
+[ Request its status ]
+      ↓
+[ Review the result and last-updated information ]
+
+Live location or delay information is available only if a live status provider is connected.`],
+      [/tourist train/, `🧳 TOURIST TRAINS
+
+[ Open Tourist Trains ]
+      ↓
+[ Browse listed journeys or packages ]
+      ↓
+[ Open an option to review its details ]
+      ↓
+[ Follow the available booking or enquiry action ]
+
+Only options actually listed in the deployed app should be treated as available.`],
+      [/quickbid|auction/, `⚡ QUICKBID
+
+[ Open QuickBid ]
+      ↓
+[ Review the demo listing and rules ]
+      ↓
+[ Explore the auction interaction ]
+
+QuickBid is a demo feature and does not itself issue real railway tickets.`],
+      [/meal|catering|food|retiring room|reserve room|book room/, `🍽️ MEALS AND 🛏️ RETIRING ROOMS
+
+[ Open Meals & Catering or the room feature ]
+      ↓
+[ Provide the PNR or details requested by the feature ]
+      ↓
+[ Review available options and any displayed amount ]
+      ↓
+[ Confirm only in the app if the feature supports it ]
+
+Availability and fulfilment depend on the current backend integration.`],
+      [/wallet|railwallet|payment/, `💳 RAILWALLET AND PAYMENTS
+
+[ Open RailWallet ]
+      ↓
+[ Review the balance and available actions ]
+      ↓
+[ Choose a supported wallet or payment action ]
+      ↓
+[ Confirm through the app’s own controls ]
+
+Never send payment credentials or OTPs in the chat.`],
+      [/cancel/, `↩️ CANCELLATION FLOW
+
+[ Open My Bookings ]
+      ↓
+[ Select the booking ]
+      ↓
+[ Review cancellation eligibility and refund information ]
+      ↓
+[ Confirm cancellation only if you agree ]
+      ↓
+[ Check the status returned by QuickRail ]
+
+Refunds depend on the booking rules and payment provider; do not assume a refund is complete until it is confirmed.`],
+    ].find(([pattern]) => pattern.test(lowerQuestion))?.[1];
+
+    if (focusedGuide) {
+      say(ctx, focusedGuide);
+      ctx.suggestions = [
+        { label: '🧭 Full guide', text: 'How do I use QuickRail?' },
+        { label: '🎫 Start booking', text: 'Book a ticket' },
+      ];
+      return;
+    }
+
+    const bookingHowTo = /\b(book|booking|ticket|reserve|reservation)\b/i.test(text);
+    const bookingFlow = `🎫 QUICKRAIL — TICKET BOOKING FLOW
+
+[ START ]
+    ↓
+[ 1. Enter journey ]
+From station + To station + Travel date
+    ↓
+[ 2. Compare trains ]
+Choose a train and available class
+    ↓
+[ 3. Add passengers ]
+Names, ages, passenger details and preferences
+    ↓
+[ 4. Review journey ]
+Check train, date, class, availability and total fare
+    ↓
+[ 5. Confirm booking ]
+Confirm only if all details are correct
+    ↓
+[ 6. Complete payment ]
+Use an available payment method, if enabled
+    ↓
+[ 7. Verify result ]
+QuickRail shows a confirmed booking/PNR only after the backend verifies the booking and payment status
+
+Tip: You can type “Book Mumbai to Pune tomorrow for 2 in 3A” to start.`;
+    const featureFlow = `🧭 QUICKRAIL — FEATURE GUIDE
+
+[ What do you want to do? ]
+    |
+    ├── 🎫 Book Train
+    |      ↓
+    |   Route + date → Train/class → Passengers
+    |      → Review fare → Confirm → Payment/result
+    |
+    ├── 🔎 PNR Enquiry
+    |      ↓
+    |   Enter PNR → View available ticket status
+    |
+    ├── 🚆 Running Status
+    |      ↓
+    |   Find train → View status if live data is connected
+    |
+    ├── 🧳 Tourist Trains
+    |      ↓
+    |   Open Tourist Trains → Explore listed journeys
+    |
+    ├── ⚡ QuickBid
+    |      ↓
+    |   Open QuickBid → Explore the demo auction
+    |   (This does not itself issue real railway tickets)
+    |
+    ├── 🍽️ Meals / 🛏️ Retiring Rooms
+    |      ↓
+    |   Open the feature → Follow its PNR-based steps if requested
+    |
+    ├── 💳 RailWallet / Payments
+    |      ↓
+    |   Open RailWallet → Review balance/options
+    |   Confirm payments yourself
+    |
+    └── 📋 My Bookings / Cancellations
+           ↓
+        Open My Bookings → Review booking details
+        → Check refund/cancellation terms → Confirm if desired
+
+Which branch should I walk you through?`;
+    say(ctx, bookingHowTo ? bookingFlow : featureFlow);
+    ctx.suggestions = [
+      { label: '🎫 How to book', text: 'How do I book a ticket?' },
+      { label: '🔎 PNR & status', text: 'How do I check PNR and running status?' },
+      { label: '🍽️ Meals & rooms', text: 'Guide me through meals and retiring rooms' },
+      { label: '⚡ QuickBid & wallet', text: 'Explain QuickBid and RailWallet' },
+    ];
+    return;
+  }
+
   const pctx = { pendingQuestion: s.pendingQuestion, stage: ctx.session.stage, resultCount: s.shown?.length || 0 };
   const rules = extractRules(text, pctx);
+
   let parsed = rules;
   const strict = ['CONFIRM_BOOKING', 'DECLINE', 'SELECT_TRAIN', 'ABORT_FLOW'].includes(rules.intent);
   if (!strict && llmEnabled()) {
@@ -141,7 +398,26 @@ async function onText(ctx, text) {
       parsed = { intent, entities: { ...l.entities, ...rules.entities } };
     }
   }
+  // Prevent the language model from turning generic commands like “book ticket” into fake station names.
+  const entityText = text.trim().toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(entityText) ||
+      /^(?:a|the) tickets?$/.test(entityText)) {
+    if (parsed.entities) {
+      if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(String(parsed.entities.source || '').toLowerCase().trim())) delete parsed.entities.source;
+      if (/^(?:book|reserve)(?: me)?(?: a)?(?: train)? tickets?$/.test(String(parsed.entities.destination || '').toLowerCase().trim())) delete parsed.entities.destination;
+    }
+  }
   const { intent, entities } = parsed;
+
+  // Use stored FAQ/greeting answers only for general conversation while no booking flow is active.
+  const generalConversation = ['GREETING', 'HELP', 'UNKNOWN'].includes(intent)
+    && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)
+    && !entities.source && !entities.destination && !entities.dateParsed
+    && !entities.classCode && !entities.passengers && !entities.pnr;
+  if (generalConversation) {
+    const knowledgeReply = await findKnowledgeReply(text);
+    if (knowledgeReply) { say(ctx, knowledgeReply); return; }
+  }
 
   // A finished booking → a fresh request starts a fresh flow.
   if (ctx.session.stage === 'CONFIRMED' && !['VIEW_BOOKINGS', 'CHECK_PNR', 'HELP', 'GREETING', 'CANCEL_BOOKING', 'CONFIRM_BOOKING', 'DECLINE'].includes(intent)) {
