@@ -275,9 +275,9 @@ const extraTrainRoutes = [
   ['60038', 'INDORE UJJAIN INTERCITY', 'INDB', 'UJN'],
   ['60039', 'GUWAHATI NEW JALPAIGURI EXPRESS', 'GHY', 'NJP'],
   ['60040', 'NEW JALPAIGURI GUWAHATI EXPRESS', 'NJP', 'GHY'],
-  ['60041', 'UDIT EXPRESS', 'NDLS', 'MMCT'],
-  ['60042', 'JAY RATH', 'HWH', 'PURI'],
-  ['60043', 'SAMYAK YATRA', 'SBC', 'MAS'],
+  ['60041', 'UDIT EXPRESS', 'MMCT', 'LKO'],
+['60042', 'JAY RATH', 'MMCT', 'KOTA'],
+['60043', 'SAMYAK YATRA', 'UCHL', 'SRVD'],
 ];
 
 trains.push(
@@ -320,7 +320,22 @@ async function seed() {
            departure_time, departure_platform, arrival_time, arrival_platform, duration,
            route_highlight, stops_count, intermediate_stops, features, operating_days)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-         ON CONFLICT (number) DO UPDATE SET name = EXCLUDED.name
+        ON CONFLICT (number) DO UPDATE SET
+  name = EXCLUDED.name,
+  badge = EXCLUDED.badge,
+  type_text = EXCLUDED.type_text,
+  from_station_code = EXCLUDED.from_station_code,
+  to_station_code = EXCLUDED.to_station_code,
+  departure_time = EXCLUDED.departure_time,
+  departure_platform = EXCLUDED.departure_platform,
+  arrival_time = EXCLUDED.arrival_time,
+  arrival_platform = EXCLUDED.arrival_platform,
+  duration = EXCLUDED.duration,
+  route_highlight = EXCLUDED.route_highlight,
+  stops_count = EXCLUDED.stops_count,
+  intermediate_stops = EXCLUDED.intermediate_stops,
+  features = EXCLUDED.features,
+  operating_days = EXCLUDED.operating_days
          RETURNING id`,
         [t.number, t.name, t.badge, t.typeText, t.from, t.to, t.departureTime, t.departurePlatform,
          t.arrivalTime, t.arrivalPlatform, t.duration, t.routeHighlight, t.stopsCount,
