@@ -16,6 +16,7 @@ onOpenChange?: (open: boolean) => void;
   userMobile: string;
   onRequireLogin: () => void;
   onWalletChanged: (balance: number) => void;
+  onOpenWallet: (amount?: number) => void;
 }
 
 const DEFAULT_SUGGESTIONS: Suggestion[] = [
@@ -38,6 +39,7 @@ export const QuickRailAI: React.FC<Props> = ({
   userMobile,
   onRequireLogin,
   onWalletChanged,
+onOpenWallet,
   isOpen,
   onOpenChange,
 }) => {
@@ -57,6 +59,10 @@ const [foodStep, setFoodStep] = useState<
   'idle' | 'waitingForPnr' | 'waitingForItems'
 >('idle');
 const [foodPnr, setFoodPnr] = useState('');
+const [walletStep, setWalletStep] = useState<
+  'idle' | 'waitingForAmount' | 'waitingForConfirmation'
+>('idle');
+const [walletAmount, setWalletAmount] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -107,6 +113,104 @@ const [foodPnr, setFoodPnr] = useState('');
   const send = useCallback(async (text: string) => {
     const t = text.trim();
     if (!t || busy) return;
+  const getWalletAmount = (value: string) => {
+    const match = value.match(/(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d{1,2})?)/i);
+    const amount = Number(match?.[1]);
+    return Number.isFinite(amount) && amount >= 100 && amount <= 50000
+      ? amount
+      : null;
+  };
+
+  const isWalletRequest =
+    /\b(top\s*up|topup|add money|recharge)\b.*\b(wallet|railwallet)\b/i.test(t) ||
+    /\b(wallet|railwallet)\b.*\b(top\s*up|topup|add money|recharge)\b/i.test(t);
+
+  if (walletStep === 'idle' && isWalletRequest) {
+    const amount = getWalletAmount(t);
+
+    setMessages((m) => [...m, { role: 'user', text: t }]);
+    setInput('');
+
+    if (!amount) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: 'How much would you like to add to your RailWallet? Enter an amount from ₹100 to ₹50,000.',
+        },
+      ]);
+      setWalletStep('waitingForAmount');
+      return;
+    }
+
+    setWalletAmount(amount);
+    setWalletStep('waitingForConfirmation');
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'assistant',
+        text: `You want to top up your RailWallet by ₹${amount.toFixed(2)}. Reply Yes to open secure payment, or No to cancel.`,
+      },
+    ]);
+    return;
+  }
+
+  if (walletStep === 'waitingForAmount') {
+    const amount = getWalletAmount(t);
+
+    setMessages((m) => [...m, { role: 'user', text: t }]);
+    setInput('');
+
+    if (!amount) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: 'Please enter a valid amount between ₹100 and ₹50,000.',
+          error: true,
+        },
+      ]);
+      return;
+    }
+
+    setWalletAmount(amount);
+    setWalletStep('waitingForConfirmation');
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'assistant',
+        text: `Confirm top-up of ₹${amount.toFixed(2)}? Reply Yes to continue or No to cancel.`,
+      },
+    ]);
+    return;
+  }
+
+  if (walletStep === 'waitingForConfirmation') {
+    setMessages((m) => [...m, { role: 'user', text: t }]);
+    setInput('');
+
+    if (/^(yes|y|confirm|okay|ok|proceed)$/i.test(t) && walletAmount) {
+      onOpenWallet(walletAmount);
+      setMessages((m) => [
+        ...m,
+        {
+          role: 'assistant',
+          text: `Opening secure payment for ₹${walletAmount.toFixed(2)}. Complete the Razorpay payment to add money to your RailWallet.`,
+        },
+      ]);
+      setWalletAmount(null);
+      setWalletStep('idle');
+      return;
+    }
+
+    setWalletAmount(null);
+    setWalletStep('idle');
+    setMessages((m) => [
+      ...m,
+      { role: 'assistant', text: 'RailWallet top-up cancelled.' },
+    ]);
+    return;
+  }
   if (
     foodStep === 'idle' &&
     /\b(food|meal|catering|order food|order meal)\b/i.test(t)
@@ -288,7 +392,7 @@ if (roomStep === 'waitingForPnr') {
     setMessages((m) => [...m, { role: 'user', text: t }]);
     setSuggestions([]);
     run(() => aiSendMessage(t, sessionId));
-  }, [busy, foodPnr, foodStep, roomStep, run, sessionId]);
+  }, [busy, foodPnr, foodStep, roomStep, run, sessionId, walletAmount, walletStep, onOpenWallet]);
 
   const act = useCallback((a: AiAction, echo?: string) => {
     if (busy) return;

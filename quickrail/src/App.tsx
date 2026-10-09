@@ -122,6 +122,7 @@ export function App() {
   const [isCateringOpen, setIsCateringOpen] = useState(false);
   const [isPnrModalOpen, setIsPnrModalOpen] = useState(false);
   const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [walletTopUpAmount, setWalletTopUpAmount] = useState<number | undefined>(undefined);
 
   // Authentication Navigation
   const handleOpenAuth = (mode: 'signin' | 'register' = 'signin') => {
@@ -462,15 +463,21 @@ export function App() {
       />
 
       {/* Interactive Modals */}
-      <QuickRailAI
-isOpen={isDishaOpen}
-onOpenChange={setIsDishaOpen}
+            <QuickRailAI
+        isOpen={isDishaOpen}
+        onOpenChange={setIsDishaOpen}
         isLoggedIn={currentUser.isLoggedIn}
         userName={currentUser.name}
         userEmail={currentUser.email}
         userMobile={currentUser.mobile}
         onRequireLogin={() => handleOpenAuth('signin')}
-        onWalletChanged={(balance) => setCurrentUser((prev) => ({ ...prev, walletBalance: balance }))}
+        onWalletChanged={(balance) =>
+          setCurrentUser((prev) => ({ ...prev, walletBalance: balance }))
+        }
+        onOpenWallet={(amount) => {
+          setWalletTopUpAmount(amount);
+          setIsWalletOpen(true);
+        }}
       />
 
       <CateringModal
@@ -486,8 +493,12 @@ onOpenChange={setIsDishaOpen}
       />
 
       <RailWalletModal
+        initialTopUpAmount={walletTopUpAmount}
         isOpen={isWalletOpen}
-        onClose={() => setIsWalletOpen(false)}
+        onClose={() => {
+          setIsWalletOpen(false);
+          setWalletTopUpAmount(undefined);
+        }}
         balance={currentUser.walletBalance}
         onTopUpSuccess={(newBal) => {
           setCurrentUser((prev) => ({ ...prev, walletBalance: newBal }));

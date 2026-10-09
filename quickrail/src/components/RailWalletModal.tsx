@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { apiCreateWalletTopupOrder, apiVerifyWalletTopup, apiGetWallet, openRazorpayCheckout, ApiError } from '../services/api';
 
 interface RailWalletModalProps {
+  initialTopUpAmount?: number;
   isOpen: boolean;
   onClose: () => void;
   balance?: number;
@@ -19,7 +20,8 @@ interface WalletTxn {
 export const RailWalletModal: React.FC<RailWalletModalProps> = ({
   isOpen,
   onClose,
-  balance: initialBalance = 0,
+   balance: initialBalance = 0,
+  initialTopUpAmount,
   onTopUpSuccess,
 }) => {
   const [balance, setBalance] = useState(initialBalance);
@@ -33,6 +35,11 @@ export const RailWalletModal: React.FC<RailWalletModalProps> = ({
     setBalance(initialBalance);
   }, [initialBalance]);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    setTopUpAmount(initialTopUpAmount ? String(initialTopUpAmount) : '');
+    setError('');
+  }, [isOpen, initialTopUpAmount]);
   // Pull real balance + transaction history from the backend whenever the modal opens.
   React.useEffect(() => {
     if (!isOpen) return;
