@@ -137,7 +137,7 @@ async function onText(ctx, text) {
   const explicitRoute = /\bfrom\s+[\p{L}][\p{L} .'-]*?\s+to\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text)
     || /\bbetween\s+[\p{L}][\p{L} .'-]*?\s+and\s+[\p{L}][\p{L} .'-]*?(?=\s+(?:tomorrow|today|on|for|in|at|after|before|with|using|\d)|[,.?!]|$)/iu.test(text);
   const hasActualPnr = /\b\d{3}[- ]?\d{7}\b/.test(text);
-  if (guideQuestion && !explicitRoute && !hasActualPnr && ['IDLE', 'CONFIRMED'].includes(ctx.session.stage)) {
+  if (guideQuestion && !explicitRoute && !hasActualPnr) {
     const lowerQuestion = text.toLowerCase();
     const focusedGuide = [
       [/journey details|starting station|destination|enter my route/, `🧭 STEP 1 — ENTER JOURNEY DETAILS
