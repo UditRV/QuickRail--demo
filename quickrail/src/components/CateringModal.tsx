@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CATERING_MENU_ITEMS } from '../data/mockData';
+import { apiPlaceFoodOrder } from '../services/api';
 
 interface CateringModalProps {
   isOpen: boolean;
@@ -10,6 +11,9 @@ interface CateringModalProps {
 export const CateringModal: React.FC<CateringModalProps> = ({ isOpen, onClose, pnrNumber = '241-9084321' }) => {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState('');
+  const [enteredPnr, setEnteredPnr] = useState(pnrNumber);
 
   if (!isOpen) return null;
 
@@ -39,6 +43,28 @@ export const CateringModal: React.FC<CateringModalProps> = ({ isOpen, onClose, p
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
 
+  const handleConfirmFoodOrder = async () => {
+    const itemIds = Object.entries(cart).flatMap(([id, quantity]) =>
+      Array.from({ length: quantity }, () => id)
+    );
+
+    if (itemIds.length === 0) return;
+
+    setSubmitting(true);
+    setOrderError('');
+
+    try {
+      await apiPlaceFoodOrder(enteredPnr.trim(), itemIds);
+      setOrderPlaced(true);
+    } catch (error) {
+      setOrderError(
+        error instanceof Error ? error.message : 'Could not place the food order.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-margin">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-[#eff4ff]">
@@ -51,9 +77,16 @@ export const CateringModal: React.FC<CateringModalProps> = ({ isOpen, onClose, p
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-headline-sm text-headline-sm font-bold">IRCTC e-Catering At Your Seat</h3>
-                <span className="bg-[#ff8928] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                  PNR #{pnrNumber}
-                </span>
+                <label className="flex items-center gap-1 rounded bg-[#ff8928] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  PNR
+                  <input
+                    value={enteredPnr}
+                    onChange={(event) => setEnteredPnr(event.target.value)}
+                    placeholder="123-4567890"
+                    className="w-24 bg-transparent text-white outline-none placeholder:text-[#ffdcc6]"
+                    aria-label="Confirmed ticket PNR"
+                  />
+                </label>
               </div>
               <p className="text-[11px] text-[#ffdcc6]">Fresh hygienic station food delivered to Coach B4 / Seat 32</p>
             </div>
@@ -173,14 +206,17 @@ export const CateringModal: React.FC<CateringModalProps> = ({ isOpen, onClose, p
               </span>
             </div>
 
-            <button
-              type="button"
-              disabled={totalItems === 0}
-              onClick={() => setOrderPlaced(true)}
+            <div className="text-right">
+              {orderError && <p className="mb-2 text-xs font-medium text-red-600">{orderError}</p>}
+              <button
+                type="button"
+                disabled={totalItems === 0 || submitting}
+                onClick={handleConfirmFoodOrder}
               className="px-space-lg py-2 bg-[#ff8928] hover:bg-[#964900] disabled:opacity-50 text-white rounded-lg font-label-md text-label-md font-bold transition-colors shadow-sm cursor-pointer"
             >
-              Confirm Seat Delivery
-            </button>
+                {submitting ? 'Saving order...' : 'Confirm Seat Delivery'}
+              </button>
+            </div>
           </div>
         )}
       </div>

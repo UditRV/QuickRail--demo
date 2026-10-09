@@ -23,10 +23,30 @@ const MENU = [
     name: 'Amritsari Kulcha & Chole Combo',
     price: 149,
   },
-  {
+   {
     id: 'cat-4',
     name: 'Chai Point Special Kulhad Ginger Chai (Pack of 2)',
     price: 89,
+  },
+  {
+    id: 'cat-5',
+    name: 'Burger King Veg Whopper Burger',
+    price: 179,
+  },
+  {
+    id: 'cat-6',
+    name: 'Grilled Chicken Meal',
+    price: 229,
+  },
+  {
+    id: 'cat-7',
+    name: 'Chicken Biryani',
+    price: 249,
+  },
+  {
+    id: 'cat-8',
+    name: 'Chocolate Ice Cream Sundae',
+    price: 99,
   },
 ];
 
