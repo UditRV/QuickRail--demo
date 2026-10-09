@@ -1,6 +1,6 @@
 import { Train, Passenger } from '../types';
 
-export const QUICK_RAIL_LOGO = '/quickrail-logo.svg';
+export const QUICK_RAIL_LOGO = '/WhatsApp%20Image%202026-10-09%20at%2023.40.00.jpeg';
 
 export const USER_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDcpnVzrPmGQO2nrFHOKB8kT5Z_vwr-dzfsmzRLBhyYHH28657or5eu2apLSpFsJZ8sdNvXO4VjqNDx7_ZenBrjEG9ZTbgnEobsS_zMH99IyFRolmZFcccuWdJxuXFTnnmZcXUTPkEkK-_x3aof6QqWelThE2ydY0IEU_3BpaPCovz8lugSg-3EvNzmhY8AOWFHoWXgra3L7p6qQL_62a5A8wB9hBYcBD0zzolVatsf4aMFR8ZgO1-u';
 
