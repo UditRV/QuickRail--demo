@@ -1,6 +1,6 @@
 import { Train, Passenger } from '../types';
 
-export const QUICK_RAIL_LOGO = 'https://lh3.googleusercontent.com/aida/AEtjO1VveDBVfHwgrgJ3fX8ZTb6wOMWdsE8XO7LRpb3I_rscYSwC5LfBgBCoFRi-LPYu39QuP8VIv3yJVIRBRQ3jVj2BEhWklMeh0tMphjY8lZ1wJ5VF7Wn58gyOX96-22DUzNo6txG2_UFF11n45jkrkdrsm8EIA2LEii2eKNljJaTCjzb17I1HG2IjIoam-5wV5aSD7XUaZiIgnPyufW9-aNbpfwQW9vlqnH3HTi5uJt2dbypF-lvpNk-p5GI';
+export const QUICK_RAIL_LOGO = '/quickrail-logo.svg';
 
 export const USER_AVATAR = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDcpnVzrPmGQO2nrFHOKB8kT5Z_vwr-dzfsmzRLBhyYHH28657or5eu2apLSpFsJZ8sdNvXO4VjqNDx7_ZenBrjEG9ZTbgnEobsS_zMH99IyFRolmZFcccuWdJxuXFTnnmZcXUTPkEkK-_x3aof6QqWelThE2ydY0IEU_3BpaPCovz8lugSg-3EvNzmhY8AOWFHoWXgra3L7p6qQL_62a5A8wB9hBYcBD0zzolVatsf4aMFR8ZgO1-u';
 
