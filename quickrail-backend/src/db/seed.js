@@ -234,6 +234,7 @@ const extraTrainClasses = () => [
   { code: 'CC', name: 'AC Chair Car', price: 850, seats: 78, rac: 6 },
 ];
 const extraTrainRoutes = [
+
   ['60001', 'PUNE NAGPUR EXPRESS', 'PUNE', 'NGP'],
   ['60002', 'NAGPUR PUNE EXPRESS', 'NGP', 'PUNE'],
   ['60003', 'SECUNDERABAD VISAKHAPATNAM EXPRESS', 'SC', 'VSKP'],
@@ -274,6 +275,9 @@ const extraTrainRoutes = [
   ['60038', 'INDORE UJJAIN INTERCITY', 'INDB', 'UJN'],
   ['60039', 'GUWAHATI NEW JALPAIGURI EXPRESS', 'GHY', 'NJP'],
   ['60040', 'NEW JALPAIGURI GUWAHATI EXPRESS', 'NJP', 'GHY'],
+  ['60041', 'UDIT EXPRESS', 'NDLS', 'MMCT'],
+  ['60042', 'JAY RATH', 'HWH', 'PURI'],
+  ['60043', 'SAMYAK YATRA', 'SBC', 'MAS'],
 ];
 
 trains.push(
