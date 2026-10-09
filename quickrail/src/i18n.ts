@@ -112,10 +112,18 @@ const EN: Record<string, string> = Object.fromEntries(Object.entries(HI).map(([e
 function translateValue(value: string, language: UiLanguage): string {
   const trimmed = value.trim();
   if (!trimmed) return value;
-  const translated = (language === 'हिन्दी' ? HI : EN)[trimmed];
-  if (!translated) return value;
-  const start = value.indexOf(trimmed);
-  return value.slice(0, start) + translated + value.slice(start + trimmed.length);
+  const dict = language === 'हिन्दी' ? HI : EN;
+  const translated = dict[trimmed];
+  if (translated) {
+    const start = value.indexOf(trimmed);
+    return value.slice(0, start) + translated + value.slice(start + trimmed.length);
+  }
+  // Also translate known phrases inside dynamic messages that include PNRs, dates or amounts.
+  let result = value;
+  for (const [source, target] of Object.entries(dict).filter(([source]) => source.length >= 8).sort((a, b) => b[0].length - a[0].length)) {
+    if (result.includes(source)) result = result.replaceAll(source, target);
+  }
+  return result;
 }
 export function applyUiLanguage(root: HTMLElement, language: UiLanguage): () => void {
   const translateNode = (node: Node) => {
